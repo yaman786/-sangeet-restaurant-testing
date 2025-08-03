@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import logo from '../assets/images/logo.png';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const location = useLocation();
+
+  // Check if restaurant is open (6 PM - 11 PM)
+  const isOpen = currentTime.getHours() >= 18 && currentTime.getHours() < 23;
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const navItems = [
     { path: '/', label: 'Home' },
@@ -36,7 +46,7 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -58,6 +68,21 @@ const Header = () => {
                 )}
               </Link>
             ))}
+            
+            {/* Open/Close Status - Desktop */}
+            <div className="flex items-center space-x-2 bg-sangeet-neutral-800/50 backdrop-blur-sm rounded-full px-4 py-2 border border-sangeet-neutral-600/30">
+              <div className={`w-3 h-3 rounded-full ${isOpen ? 'bg-green-400' : 'bg-red-400'} animate-pulse shadow-sm`}></div>
+              <span className={`text-sm font-semibold ${isOpen ? 'text-green-400' : 'text-red-400'}`}>
+                {isOpen ? 'OPEN' : 'CLOSED'}
+              </span>
+              <span className="text-xs text-sangeet-neutral-400">
+                {currentTime.toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true
+                })}
+              </span>
+            </div>
           </nav>
 
           {/* Mobile menu button - Fork, Knife & Plate Icon - Centered */}

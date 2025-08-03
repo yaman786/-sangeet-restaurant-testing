@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 
@@ -16,6 +16,17 @@ import ContactPage from './pages/ContactPage';
 
 // Services
 import { fetchMenuItems, fetchReviews, fetchEvents } from './services/api';
+
+// ScrollToTop component
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   const [menuItems, setMenuItems] = useState([]);
@@ -58,6 +69,7 @@ function App() {
 
   return (
             <div className="min-h-screen bg-sangeet-neutral-950">
+      <ScrollToTop />
       <Header />
       
       <AnimatePresence mode="wait">

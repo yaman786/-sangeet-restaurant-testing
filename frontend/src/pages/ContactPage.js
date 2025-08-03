@@ -87,11 +87,19 @@ const ContactPage = () => {
 
             <div className="bg-sangeet-900 p-8 rounded-lg shadow-lg">
               <h3 className="text-2xl font-semibold text-sangeet-300 mb-6">Location</h3>
-              <div className="bg-sangeet-800 h-64 rounded-lg flex items-center justify-center">
-                <div className="text-center text-sangeet-400">
-                  <div className="text-4xl mb-2">🗺️</div>
-                  <p>Interactive Map</p>
-                  <p className="text-sm">(Map integration would go here)</p>
+              <div className="relative h-64 rounded-lg overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?w=800&h=400&fit=crop"
+                  alt="Wanchai, Hong Kong - Sangeet Restaurant Location"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-sangeet-neutral-900/60 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="bg-sangeet-neutral-900/90 backdrop-blur-md rounded-lg p-4 border border-sangeet-neutral-700">
+                    <h4 className="text-sangeet-400 font-bold text-lg mb-1">📍 Sangeet Restaurant</h4>
+                    <p className="text-sangeet-neutral-300 text-sm">Wanchai, Hong Kong</p>
+                    <p className="text-sangeet-neutral-400 text-xs mt-1">Easy access via MTR and bus routes</p>
+                  </div>
                 </div>
               </div>
             </div>

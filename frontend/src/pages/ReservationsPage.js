@@ -26,16 +26,30 @@ const ReservationsPage = () => {
   };
 
   return (
-            <div className="min-h-screen bg-sangeet-neutral-950 py-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-sangeet-neutral-950 py-20">
+      {/* Hero Background */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&h=1080&fit=crop"
+          alt="Elegant restaurant dining experience"
+          className="w-full h-full object-cover opacity-20"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-sangeet-neutral-950 via-sangeet-neutral-950/95 to-sangeet-neutral-950"></div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-                      <h1 className="text-5xl font-bold text-sangeet-400 mb-4">Make a Reservation</h1>
-            <p className="text-sangeet-neutral-400 text-lg">Book your table for an unforgettable dining experience</p>
+          <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-sangeet-400/20 to-sangeet-red-500/20 backdrop-blur-md border border-sangeet-400/30 rounded-full px-6 py-2 mb-4">
+            <span className="text-2xl">📅</span>
+            <span className="text-sangeet-400 font-semibold">Reservations</span>
+          </div>
+          <h1 className="text-5xl font-bold text-sangeet-400 mb-4">Make a Reservation</h1>
+          <p className="text-sangeet-neutral-400 text-lg">Book your table for an unforgettable dining experience</p>
         </motion.div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">

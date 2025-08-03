@@ -1,200 +1,463 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import logo from '../assets/images/logo.png';
 
+/**
+ * AboutPage Component - Streamlined Essential Sections
+ * Features: Hero video, simplified story, gallery with filters, team, and CTA
+ */
 const AboutPage = () => {
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  // Gallery filter state
+  const [activeFilter, setActiveFilter] = useState('all');
 
+  // Gallery filter options
+  const galleryFilters = [
+    { id: 'all', label: 'All', icon: '🖼️' },
+    { id: 'dining', label: 'Dining Areas', icon: '🏛️' },
+    { id: 'celebrations', label: 'Celebrations', icon: '🎉' },
+    { id: 'cultural', label: 'Cultural Experience', icon: '🎭' },
+    { id: 'culinary', label: 'Culinary Journey', icon: '🍳' }
+  ];
+
+  // Enhanced gallery images with categories
   const galleryImages = [
+    // Dining Areas
     {
       url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop",
-      title: "Elegant Dining Hall",
-      description: "Our main dining area with warm lighting and traditional South Asian decor"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&h=600&fit=crop",
-      title: "Private Dining Room",
-      description: "Intimate private dining spaces perfect for special occasions"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=800&h=600&fit=crop",
-      title: "Chef's Kitchen",
-      description: "Where authentic flavors come to life with traditional cooking methods"
+      title: "Main Dining Hall",
+      description: "Our grand dining hall accommodates 150+ guests with sophisticated decor and warm lighting",
+      category: "dining"
     },
     {
       url: "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&h=600&fit=crop",
+      title: "Private Dining Room",
+      description: "Intimate private dining spaces perfect for special occasions and celebrations",
+      category: "dining"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=600&fit=crop",
       title: "Bar & Lounge",
-      description: "Relax with premium spirits and handcrafted cocktails"
+      description: "Relax with premium spirits and handcrafted cocktails in our elegant bar area",
+      category: "dining"
+    },
+    
+    // Celebrations
+    {
+      url: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&h=600&fit=crop",
+      title: "Birthday Celebration",
+      description: "Creating memorable birthday celebrations with authentic South Asian hospitality",
+      category: "celebrations"
     },
     {
-      url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop",
-      title: "Outdoor Terrace",
-      description: "Al fresco dining with views of Wanchai's vibrant atmosphere"
+      url: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&h=600&fit=crop",
+      title: "Wedding Reception",
+      description: "Elegant wedding receptions with traditional South Asian wedding customs",
+      category: "celebrations"
     },
     {
-      url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=600&fit=crop",
-      title: "Cultural Performances",
-      description: "Live music and dance performances that bring South Asian culture to life"
+      url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&h=600&fit=crop",
+      title: "Family Gathering",
+      description: "Warm family gatherings celebrating special moments and traditions",
+      category: "celebrations"
+    },
+    
+    // Cultural Experience
+    {
+      url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop",
+      title: "Live Music Performance",
+      description: "Traditional South Asian music performances that create an authentic atmosphere",
+      category: "cultural"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1547153760-18fc86324498?w=800&h=600&fit=crop",
+      title: "Traditional Dance",
+      description: "Cultural dance performances that bring South Asian heritage to life",
+      category: "cultural"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1606220838315-056192d5e927?w=800&h=600&fit=crop",
+      title: "Cultural Decor",
+      description: "Authentic South Asian decor and traditional elements throughout our space",
+      category: "cultural"
+    },
+    
+    // Culinary Journey
+    {
+      url: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&h=600&fit=crop",
+      title: "Chef's Special",
+      description: "Signature dishes crafted with passion and authentic South Asian techniques",
+      category: "culinary"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&h=600&fit=crop",
+      title: "Traditional Cooking",
+      description: "Behind-the-scenes look at our traditional cooking methods and techniques",
+      category: "culinary"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&h=600&fit=crop",
+      title: "Signature Dishes",
+      description: "Our most popular dishes showcasing the diversity of South Asian cuisine",
+      category: "culinary"
     }
   ];
 
-  const experienceImages = [
+  // Filter gallery images based on active filter
+  const filteredImages = activeFilter === 'all' 
+    ? galleryImages 
+    : galleryImages.filter(image => image.category === activeFilter);
+
+  // Unique story highlights with diverse focus
+  const storyHighlights = [
     {
-      url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=400&fit=crop",
-      title: "Lunch Buffet",
-      description: "50+ authentic dishes from across South Asia"
+      icon: "🌟",
+      title: "Innovation Meets Tradition",
+      description: "Chef Rajesh Kumar's creative approach to classic South Asian recipes, blending authentic flavors with contemporary techniques"
     },
     {
-      url: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&h=400&fit=crop",
-      title: "Fine Dining",
-      description: "Curated evening menu with wine pairings"
+      icon: "🏛️",
+      title: "Versatile Venue",
+      description: "Multiple dining spaces designed for every occasion - from romantic dinners to corporate events and cultural celebrations"
     },
     {
-      url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop",
-      title: "Afternoon Tea",
-      description: "Premium teas from the Himalayas and India"
+      icon: "🎭",
+      title: "Living Culture",
+      description: "Daily live performances featuring traditional music, dance, and cultural storytelling that bring South Asian heritage to life"
+    }
+  ];
+
+  // Key statistics
+  const keyStats = [
+    { number: "150+", label: "Seat Capacity", icon: "🍽️" },
+    { number: "5,300", label: "Sq Ft Space", icon: "🏛️" },
+    { number: "100+", label: "Family Recipes", icon: "📜" }
+  ];
+
+  // Enhanced team members with strategic positioning
+  const teamMembers = [
+    {
+      name: "Chef Rajesh Kumar",
+      role: "Executive Chef & Culinary Director",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
+      description: "Award-winning chef with 15+ years crafting authentic South Asian cuisine. His signature dishes blend traditional techniques with modern innovation, earning recognition in Hong Kong's culinary scene."
+    },
+    {
+      name: "Priya Sharma",
+      role: "General Manager & Hospitality Director",
+      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop&crop=face",
+      description: "Leading our team with 10+ years in luxury hospitality. Priya ensures every guest receives personalized attention and creates memorable experiences for celebrations and events."
+    },
+    {
+      name: "Amit Patel",
+      role: "Beverage Director & Sommelier",
+      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
+      description: "Expert in premium spirits and wine pairings. Amit curates our extensive beverage program, featuring rare teas from the Himalayas and fine wines that complement our authentic cuisine."
+    }
+  ];
+
+  // Enhanced awards and recognition with strategic positioning
+  const awards = [
+    {
+      icon: "🏆",
+      title: "Best New Restaurant 2024",
+      description: "Hong Kong Food Awards - Excellence in South Asian Cuisine"
+    },
+    {
+      icon: "⭐",
+      title: "4.8/5 Customer Rating",
+      description: "Based on 500+ verified reviews - Outstanding Service & Quality"
+    },
+    {
+      icon: "🎭",
+      title: "Cultural Excellence Award",
+      description: "Hong Kong Tourism Board - Best Cultural Dining Experience"
+    },
+    {
+      icon: "🍽️",
+      title: "Chef's Choice Award",
+      description: "Hong Kong Culinary Association - Innovation in Traditional Cuisine"
     }
   ];
 
   return (
     <div className="min-h-screen bg-sangeet-neutral-950">
-      {/* Enhanced Hero Section with Video */}
-      <section className="relative h-screen overflow-hidden">
-        {/* Video Background */}
-        <div className="absolute inset-0">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-            poster="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&h=1080&fit=crop"
-          >
-            <source src="https://player.vimeo.com/external/434045526.sd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=164&oauth2_token_id=57447761" type="video/mp4" />
-            {/* Fallback image if video doesn't load */}
-            <img 
-              src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&h=1080&fit=crop" 
-              alt="Restaurant ambiance"
-              className="w-full h-full object-cover"
-            />
-          </video>
+      {/* Unique AboutPage Hero - Story-Focused Design */}
+      <section className="relative min-h-screen bg-gradient-to-br from-sangeet-neutral-950 via-sangeet-neutral-900 to-sangeet-neutral-950">
+        {/* Hero Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1920&h=1080&fit=crop"
+            alt="Chef preparing authentic South Asian cuisine"
+            className="w-full h-full object-cover opacity-15"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-sangeet-neutral-950 via-sangeet-neutral-900/95 to-sangeet-neutral-950"></div>
         </div>
-        
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-sangeet-neutral-900/80 via-sangeet-neutral-800/70 to-sangeet-neutral-900/80 z-10"></div>
-        
-        {/* Content */}
+
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10 z-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fbbf24' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}></div>
+        </div>
+
+        {/* Floating Elements - Better Positioned */}
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="relative z-20 flex items-center justify-center h-full text-center text-white px-4"
+          animate={{ 
+            y: [0, -20, 0],
+            rotate: [0, 5, 0]
+          }}
+          transition={{ 
+            duration: 6, 
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-32 left-8 md:left-16 text-4xl md:text-6xl opacity-20 z-10"
         >
-          <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1, delay: 0.3 }}
-              className="mb-8"
-            >
-              <div className="relative inline-block">
-                <div className="absolute inset-0 bg-gradient-to-r from-sangeet-400/20 to-sangeet-red-500/20 rounded-full blur-2xl animate-pulse"></div>
-                <img 
-                  src={logo} 
-                  alt="Sangeet Restaurant" 
-                  className="relative h-24 md:h-32 w-auto logo-image-hero"
-                />
-              </div>
-            </motion.div>
+          🌟
+        </motion.div>
+        
+        <motion.div
+          animate={{ 
+            y: [0, 15, 0],
+            rotate: [0, -5, 0]
+          }}
+          transition={{ 
+            duration: 8, 
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+          className="absolute top-48 right-8 md:right-16 text-3xl md:text-5xl opacity-20 z-10"
+        >
+          🎭
+        </motion.div>
+
+        <motion.div
+          animate={{ 
+            y: [0, -10, 0],
+            rotate: [0, 3, 0]
+          }}
+          transition={{ 
+            duration: 7, 
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+          className="absolute bottom-32 left-8 md:left-16 text-xl md:text-3xl opacity-15 z-10"
+        >
+          🍽️
+        </motion.div>
+
+        {/* Main Content Container - Better Centered */}
+        <div className="relative z-20 flex items-center justify-center min-h-screen px-4 py-16">
+          <div className="max-w-5xl mx-auto text-center">
             
-            <motion.h1
+            {/* Story Badge - Better Spacing */}
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6"
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="mb-12"
             >
-              <span className="text-white">Experience</span>
+              <div className="inline-flex items-center space-x-3 bg-gradient-to-r from-sangeet-400/20 to-sangeet-red-500/20 backdrop-blur-md border border-sangeet-400/30 rounded-full px-8 py-4">
+                <span className="text-2xl">📖</span>
+                <span className="text-sangeet-400 font-semibold text-lg">Our Story</span>
+                <span className="text-2xl">✨</span>
+              </div>
+            </motion.div>
+
+            {/* Main Headline - Better Typography */}
+            <motion.h1
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.4 }}
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-10 leading-tight px-4"
+            >
+              <span className="text-white">From Family</span>
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-sangeet-400 to-sangeet-red-500">
-                Authentic Flavors
+                Traditions
               </span>
+              <br />
+              <span className="text-white">To Your Table</span>
             </motion.h1>
-            
+
+            {/* Story Subtitle - Unique & Compelling */}
             <motion.p
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.7 }}
-              className="text-xl md:text-2xl lg:text-3xl max-w-4xl mx-auto leading-relaxed"
+              transition={{ duration: 1, delay: 0.6 }}
+              className="text-lg md:text-xl text-sangeet-neutral-300 mb-16 max-w-4xl mx-auto leading-relaxed px-4"
             >
-              Where the soul of South Asia comes alive in the heart of Wanchai. 
-              <span className="text-sangeet-400 font-semibold"> An immersive celebration of culture, community, and connection.</span>
+              Welcome to Sangeet, where the soul of South Asia comes alive in the heart of Wanchai. 
+              <span className="text-sangeet-400 font-semibold"> Rooted in vibrant traditions of music, dance, and culinary artistry</span>, 
+              we're more than a dining destination—we're an immersive celebration of culture, community, and connection. 
+              Every moment at Sangeet is crafted to create unforgettable memories.
             </motion.p>
 
-            {/* Mobile-Optimized Action Buttons */}
+            {/* Story Timeline Preview - Better Grid */}
             <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 1 }}
-              className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.8 }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-16 max-w-5xl mx-auto px-4"
             >
-              {/* Book Now Button - Primary CTA */}
+              <div className="bg-sangeet-neutral-900/50 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-sangeet-neutral-700 hover:border-sangeet-400/50 transition-all duration-300">
+                <div className="text-3xl md:text-4xl mb-4">👨‍🍳</div>
+                <h3 className="text-sangeet-400 font-bold text-lg md:text-xl mb-3">Chef's Signature</h3>
+                <p className="text-sangeet-neutral-400 text-sm md:text-base">Chef Rajesh Kumar's innovative take on traditional South Asian flavors</p>
+              </div>
+              
+              <div className="bg-sangeet-neutral-900/50 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-sangeet-neutral-700 hover:border-sangeet-400/50 transition-all duration-300">
+                <div className="text-3xl md:text-4xl mb-4">🏛️</div>
+                <h3 className="text-sangeet-400 font-bold text-lg md:text-xl mb-3">Sophisticated Spaces</h3>
+                <p className="text-sangeet-neutral-400 text-sm md:text-base">Multiple dining areas designed for intimate dinners and grand celebrations</p>
+              </div>
+              
+              <div className="bg-sangeet-neutral-900/50 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-sangeet-neutral-700 hover:border-sangeet-400/50 transition-all duration-300">
+                <div className="text-3xl md:text-4xl mb-4">🎭</div>
+                <h3 className="text-sangeet-400 font-bold text-lg md:text-xl mb-3">Cultural Immersion</h3>
+                <p className="text-sangeet-neutral-400 text-sm md:text-base">Live performances and authentic decor that transport you to South Asia</p>
+              </div>
+            </motion.div>
+
+            {/* Story-Focused CTAs - Better Spacing */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 1.0 }}
+              className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center items-center mb-12 px-4"
+            >
+              {/* Primary CTA - Learn More */}
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center space-x-3 bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 px-8 py-4 rounded-2xl font-bold text-lg hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-2xl hover:shadow-sangeet-400/30 touch-manipulation min-h-[56px]"
+                className="bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 px-8 md:px-10 py-4 rounded-2xl font-bold text-lg md:text-xl hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-2xl hover:shadow-sangeet-400/30 flex items-center space-x-3"
               >
-                <span className="text-2xl">📅</span>
-                <span>Book Now</span>
+                <span className="text-xl md:text-2xl">📖</span>
+                <span>Read Our Story</span>
                 <motion.span
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
+                  animate={{ x: [0, 8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 >
                   →
                 </motion.span>
               </motion.button>
-
-              {/* WhatsApp Button - Secondary CTA */}
-              <motion.a
-                href="https://wa.me/85223456789?text=Hi! I'd like to make a reservation at Sangeet Restaurant."
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.05 }}
+              
+              {/* Secondary CTA - Contact */}
+              <motion.button
+                whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center space-x-3 bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-green-400 hover:to-green-500 transition-all duration-300 shadow-2xl hover:shadow-green-500/30 touch-manipulation min-h-[56px]"
+                className="bg-sangeet-neutral-800/80 backdrop-blur-md text-sangeet-400 px-6 md:px-8 py-4 rounded-2xl font-bold text-lg hover:bg-sangeet-neutral-700/80 transition-all duration-300 border border-sangeet-neutral-600 flex items-center space-x-3"
               >
-                <span className="text-2xl">💬</span>
-                <span>WhatsApp</span>
-                <motion.span
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
-                >
-                  →
-                </motion.span>
-              </motion.a>
+                <span className="text-lg md:text-xl">💬</span>
+                <span>Get in Touch</span>
+              </motion.button>
+            </motion.div>
+
+            {/* Unique Story Elements */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 1.2 }}
+              className="flex flex-wrap justify-center items-center gap-6 md:gap-8 text-sangeet-neutral-400 px-4"
+            >
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🌶️</span>
+                <span className="text-sm md:text-base">Authentic Spices</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🎵</span>
+                <span className="text-sm md:text-base">Traditional Music</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">💎</span>
+                <span className="text-sm md:text-base">Luxury Experience</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">❤️</span>
+                <span className="text-sm md:text-base">Warm Hospitality</span>
+              </div>
             </motion.div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Scroll Indicator */}
+        {/* Scroll Indicator - Subtle Position */}
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20"
+          className="absolute bottom-4 right-6 z-30"
         >
-          <div className="flex flex-col items-center space-y-2 text-sangeet-neutral-400">
-            <span className="text-sm">Scroll to explore</span>
-            <div className="w-6 h-10 border-2 border-sangeet-neutral-400 rounded-full flex justify-center">
+          <div className="flex flex-col items-center space-y-1 text-sangeet-neutral-500 opacity-60 hover:opacity-100 transition-opacity duration-300">
+            <span className="text-xs">Scroll</span>
+            <div className="w-4 h-6 border border-sangeet-neutral-500 rounded-full flex justify-center">
               <motion.div
-                animate={{ y: [0, 12, 0] }}
+                animate={{ y: [0, 8, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="w-1 h-3 bg-sangeet-neutral-400 rounded-full mt-2"
+                className="w-0.5 h-2 bg-sangeet-neutral-500 rounded-full mt-1"
               />
             </div>
           </div>
         </motion.div>
       </section>
 
-      {/* Restaurant Gallery Section */}
+
+
+      {/* Enhanced Our Story Section */}
+      <section className="py-20 bg-gradient-to-br from-sangeet-neutral-900 via-sangeet-neutral-800 to-sangeet-neutral-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-sangeet-400/20 to-sangeet-red-500/20 backdrop-blur-md border border-sangeet-400/30 rounded-full px-6 py-2 mb-4">
+              <span className="text-2xl">🌟</span>
+              <span className="text-sangeet-400 font-semibold">Our Story</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-sangeet-400 mb-4">Follow Our Journey</h2>
+            <p className="text-sangeet-neutral-400 text-lg max-w-3xl mx-auto">
+              Nestled in Wanchai's bustling center, Sangeet bridges the timeless and the contemporary. We create bespoke experiences where every dish tells a story, every performance celebrates heritage, and every moment becomes a cherished memory. From intimate dinners to grand celebrations, we're here to make your special occasions extraordinary.
+            </p>
+          </motion.div>
+
+          {/* Story Highlights */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            {storyHighlights.map((highlight, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-sangeet-neutral-900/50 backdrop-blur-md rounded-2xl p-8 border border-sangeet-neutral-700 text-center"
+              >
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{highlight.icon}</div>
+                <h3 className="text-2xl font-bold text-sangeet-400 mb-3 group-hover:text-sangeet-300 transition-colors">{highlight.title}</h3>
+                <p className="text-sangeet-neutral-300 text-sm leading-relaxed">{highlight.description}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Key Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {keyStats.map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-sangeet-neutral-900/50 backdrop-blur-md rounded-2xl p-8 border border-sangeet-neutral-700 text-center"
+              >
+                <div className="text-4xl mb-2">{stat.icon}</div>
+                <div className="text-sangeet-400 font-bold text-3xl">{stat.number}</div>
+                <div className="text-sangeet-neutral-400 text-sm">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Enhanced Restaurant Gallery Section with Filters */}
       <section className="py-20 bg-sangeet-neutral-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -203,18 +466,69 @@ const AboutPage = () => {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-sangeet-400 mb-4">Our Spaces</h2>
+            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-sangeet-400/20 to-sangeet-red-500/20 backdrop-blur-md border border-sangeet-400/30 rounded-full px-6 py-2 mb-4">
+              <span className="text-2xl">📸</span>
+              <span className="text-sangeet-400 font-semibold">Gallery</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-sangeet-400 mb-4">Experience Sangeet</h2>
             <p className="text-sangeet-neutral-400 text-lg max-w-3xl mx-auto">
-              Discover the carefully crafted environments that make every visit to Sangeet a memorable experience
+              Step into our world through these carefully curated moments. From intimate celebrations to grand cultural events, each photograph captures the essence of what makes Sangeet truly special - authentic flavors, warm hospitality, and unforgettable experiences.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {galleryImages.map((image, index) => (
+          {/* Filter Buttons - Desktop */}
+          <div className="hidden md:flex flex-wrap justify-center gap-4 mb-12">
+            {galleryFilters.map((filter) => (
+              <motion.button
+                key={filter.id}
+                onClick={() => setActiveFilter(filter.id)}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                className={`inline-flex items-center space-x-2 px-6 py-3 rounded-full font-semibold text-lg transition-all duration-300 ${
+                  activeFilter === filter.id
+                    ? 'bg-sangeet-400 text-sangeet-neutral-950 shadow-lg'
+                    : 'bg-sangeet-neutral-800/50 text-sangeet-neutral-400 hover:bg-sangeet-neutral-700/50 hover:text-sangeet-300'
+                }`}
+              >
+                <span className="text-2xl">{filter.icon}</span>
+                <span>{filter.label}</span>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Filter Buttons - Mobile */}
+          <div className="md:hidden overflow-x-auto scrollbar-hide mb-8">
+            <div className="flex space-x-3 px-4">
+              {galleryFilters.map((filter) => (
+                <motion.button
+                  key={filter.id}
+                  onClick={() => setActiveFilter(filter.id)}
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex-shrink-0 inline-flex items-center space-x-2 px-4 py-2 rounded-full font-semibold text-sm transition-all duration-300 ${
+                    activeFilter === filter.id
+                      ? 'bg-sangeet-400 text-sangeet-neutral-950 shadow-lg'
+                      : 'bg-sangeet-neutral-800/50 text-sangeet-neutral-400 hover:bg-sangeet-neutral-700/50'
+                  }`}
+                >
+                  <span className="text-lg">{filter.icon}</span>
+                  <span>{filter.label}</span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Gallery Grid */}
+          <motion.div 
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {filteredImages.map((image, index) => (
               <motion.div
-                key={index}
+                key={`${image.category}-${index}`}
+                layout
                 initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -30 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ y: -8, scale: 1.02 }}
                 className="group relative overflow-hidden rounded-2xl shadow-2xl"
@@ -226,6 +540,13 @@ const AboutPage = () => {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-sangeet-neutral-900/80 via-transparent to-transparent"></div>
+                  
+                  {/* Category Badge */}
+                  <div className="absolute top-4 left-4">
+                    <div className="bg-sangeet-400/90 backdrop-blur-md text-sangeet-neutral-950 px-3 py-1 rounded-full text-xs font-semibold">
+                      {galleryFilters.find(f => f.id === image.category)?.label}
+                    </div>
+                  </div>
                   
                   {/* Content Overlay */}
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
@@ -242,231 +563,20 @@ const AboutPage = () => {
                 </div>
               </motion.div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Story Section with Enhanced Visuals */}
-      <section className="py-20 bg-sangeet-neutral-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <div className="flex items-center mb-8">
-                <img 
-                  src={logo} 
-                  alt="Sangeet Restaurant" 
-                  className="h-16 w-auto mr-4 opacity-75"
-                />
-                <h2 className="text-4xl md:text-5xl font-bold text-sangeet-400">Our Story</h2>
-              </div>
-              
-              <div className="space-y-8 text-sangeet-neutral-400 text-lg">
-                <div className="space-y-4">
-                  <h3 className="text-2xl font-bold text-sangeet-400 mb-4">A Feast for the Senses</h3>
-                  <p className="leading-relaxed text-lg">
-                    Step into our 5,300 sq. ft oasis, where the aromas of authentic South Asian cuisine mingle with the rhythm of live cultural performances. From the lush valleys of Nepal to the bustling spice markets of India, our chefs craft a culinary journey that honours regional diversity.
-                  </p>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-2xl font-bold text-sangeet-400 mb-4">Your Space for Every Occasion</h3>
-                  <p className="leading-relaxed text-lg">
-                    With 150 seats and three elegant private dining rooms, Sangeet is designed to host life's milestones. Whether it's a weaning ceremony steeped in tradition, a joyful birthday gathering, a dream wedding, or a corporate event, our team provides bespoke experiences infused with warmth and authenticity.
-                  </p>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-2xl font-bold text-sangeet-400 mb-4">Where Heritage Meets Modernity</h3>
-                  <p className="leading-relaxed text-lg">
-                    Nestled in Wanchai's bustling centre, Sangeet bridges the timeless and the contemporary. We invite you to dine, celebrate, and lose yourself in the rhythm of South Asia—one unforgettable moment at a time.
-                  </p>
-                </div>
-                
-                <div className="text-center pt-8">
-                  <p className="text-3xl font-bold text-sangeet-400 italic">
-                    Come. Savor. Celebrate.
-                  </p>
-                  <p className="text-lg text-sangeet-neutral-400 mt-3">
-                    At Sangeet, every day is a festival.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative"
-            >
-              {/* Image Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="overflow-hidden rounded-2xl"
-                  >
-                    <img
-                      src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop"
-                      alt="Chef preparing authentic dishes"
-                      className="w-full h-48 object-cover hover:scale-110 transition-transform duration-500"
-                    />
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="overflow-hidden rounded-2xl"
-                  >
-                    <img
-                      src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&h=300&fit=crop"
-                      alt="Elegant dining atmosphere"
-                      className="w-full h-48 object-cover hover:scale-110 transition-transform duration-500"
-                    />
-                  </motion.div>
-                </div>
-                <div className="space-y-4 pt-8">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="overflow-hidden rounded-2xl"
-                  >
-                    <img
-                      src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop"
-                      alt="Restaurant interior"
-                      className="w-full h-48 object-cover hover:scale-110 transition-transform duration-500"
-                    />
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="overflow-hidden rounded-2xl"
-                  >
-                    <img
-                      src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=300&fit=crop"
-                      alt="Cultural performance"
-                      className="w-full h-48 object-cover hover:scale-110 transition-transform duration-500"
-                    />
-                  </motion.div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Dining Experiences Section */}
-      <section className="py-20 bg-gradient-to-br from-sangeet-neutral-900 via-sangeet-neutral-800 to-sangeet-neutral-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-sangeet-400 mb-4">Dining Experiences</h2>
-            <p className="text-sangeet-neutral-400 text-lg max-w-3xl mx-auto">
-              From lavish buffets to intimate fine dining, discover the perfect experience for every occasion
-            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {experienceImages.map((experience, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="group bg-gradient-to-br from-sangeet-neutral-900 to-sangeet-neutral-800 rounded-2xl overflow-hidden shadow-2xl hover:shadow-sangeet-400/20 transition-all duration-500 border border-sangeet-neutral-700 hover:border-sangeet-400"
-              >
-                <div className="relative h-64 overflow-hidden">
-                  <img
-                    src={experience.url}
-                    alt={experience.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-sangeet-neutral-900/60 to-transparent"></div>
-                </div>
-                <div className="p-8">
-                  <h3 className="text-2xl font-bold text-sangeet-400 mb-4 group-hover:text-sangeet-300 transition-colors">
-                    {experience.title}
-                  </h3>
-                  <p className="text-sangeet-neutral-400 mb-6 leading-relaxed">
-                    {experience.description}
-                  </p>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 py-3 rounded-xl font-semibold hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-lg hover:shadow-sangeet-400/25"
-                  >
-                    Learn More
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Values Section */}
-      <section className="py-20 bg-sangeet-neutral-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-sangeet-400 mb-4">Our Values</h2>
-            <p className="text-sangeet-neutral-400 text-lg max-w-3xl mx-auto">The principles that guide everything we do and make Sangeet truly special</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: "🌿",
-                title: "Authenticity",
-                description: "We stay true to traditional recipes and cooking methods, ensuring every dish carries the authentic flavors of India and Nepal.",
-                image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop"
-              },
-              {
-                icon: "❤️",
-                title: "Passion",
-                description: "Our love for food drives us to create exceptional dining experiences that leave lasting memories.",
-                image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&h=300&fit=crop"
-              },
-              {
-                icon: "🤝",
-                title: "Hospitality",
-                description: "We treat every guest like family, providing warm, attentive service that makes you feel at home.",
-                image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop"
-              }
-            ].map((value, index) => (
-              <motion.div
-                key={value.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="group bg-gradient-to-br from-sangeet-neutral-900 to-sangeet-neutral-800 rounded-2xl overflow-hidden shadow-2xl hover:shadow-sangeet-400/20 transition-all duration-500 border border-sangeet-neutral-700 hover:border-sangeet-400"
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={value.image}
-                    alt={value.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-sangeet-neutral-900/60 to-transparent"></div>
-                </div>
-                <div className="p-8 text-center">
-                  <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">{value.icon}</div>
-                  <h3 className="text-2xl font-bold text-sangeet-400 mb-4 group-hover:text-sangeet-300 transition-colors">{value.title}</h3>
-                  <p className="text-sangeet-neutral-400 leading-relaxed">{value.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {/* No Results Message */}
+          {filteredImages.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12"
+            >
+              <div className="text-6xl mb-4">📸</div>
+              <h3 className="text-2xl font-bold text-sangeet-neutral-400 mb-2">No images found</h3>
+              <p className="text-sangeet-neutral-500">Try selecting a different filter</p>
+            </motion.div>
+          )}
         </div>
       </section>
 
@@ -484,29 +594,7 @@ const AboutPage = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Chef Rajesh Sharma",
-                role: "Head Chef & Founder",
-                image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
-                description: "With over 20 years of culinary experience, Chef Rajesh brings authentic flavors from his native India.",
-                specialty: "Traditional Indian Cuisine"
-              },
-              {
-                name: "Priya Patel",
-                role: "Sous Chef",
-                image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face",
-                description: "Specializing in Nepali cuisine, Priya ensures every dish meets our high standards of excellence.",
-                specialty: "Nepali Specialties"
-              },
-              {
-                name: "Amit Kumar",
-                role: "Restaurant Manager",
-                image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
-                description: "Amit ensures every guest receives exceptional service and a memorable dining experience.",
-                specialty: "Guest Experience"
-              }
-            ].map((member, index) => (
+            {teamMembers.map((member, index) => (
               <motion.div
                 key={member.name}
                 initial={{ opacity: 0, y: 30 }}
@@ -524,9 +612,7 @@ const AboutPage = () => {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     </div>
-                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-sangeet-400 text-sangeet-neutral-950 px-4 py-1 rounded-full text-sm font-semibold">
-                      {member.specialty}
-                    </div>
+
                   </div>
                   <h3 className="text-2xl font-bold text-sangeet-400 mb-2 group-hover:text-sangeet-300 transition-colors">{member.name}</h3>
                   <p className="text-sangeet-neutral-400 font-medium mb-4">{member.role}</p>
@@ -551,39 +637,10 @@ const AboutPage = () => {
             <p className="text-sangeet-neutral-400 text-lg max-w-3xl mx-auto">Celebrating our achievements and commitment to culinary excellence</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { 
-                year: "2024", 
-                award: "Best Indian Restaurant", 
-                source: "Hong Kong Food Awards",
-                icon: "🏆",
-                description: "Recognized for authentic flavors and exceptional dining experience"
-              },
-              { 
-                year: "2023", 
-                award: "Excellence in Service", 
-                source: "Restaurant Association",
-                icon: "⭐",
-                description: "Awarded for outstanding hospitality and guest satisfaction"
-              },
-              { 
-                year: "2022", 
-                award: "Chef of the Year", 
-                source: "Culinary Institute",
-                icon: "👨‍🍳",
-                description: "Chef Rajesh honored for culinary innovation and tradition"
-              },
-              { 
-                year: "2021", 
-                award: "Customer Choice", 
-                source: "OpenTable",
-                icon: "❤️",
-                description: "Voted favorite by thousands of satisfied diners"
-              }
-            ].map((award, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {awards.map((award, index) => (
               <motion.div
-                key={award.year}
+                key={award.title}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -593,16 +650,10 @@ const AboutPage = () => {
                 <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
                   {award.icon}
                 </div>
-                <div className="text-3xl font-bold text-sangeet-400 mb-3 group-hover:text-sangeet-300 transition-colors">
-                  {award.year}
-                </div>
                 <h3 className="text-xl font-bold text-sangeet-400 mb-3 group-hover:text-sangeet-300 transition-colors">
-                  {award.award}
+                  {award.title}
                 </h3>
-                <p className="text-sangeet-neutral-400 font-medium mb-4">
-                  {award.source}
-                </p>
-                <p className="text-sangeet-neutral-500 text-sm leading-relaxed">
+                <p className="text-sangeet-neutral-400 font-medium">
                   {award.description}
                 </p>
               </motion.div>
@@ -620,10 +671,11 @@ const AboutPage = () => {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-sangeet-400 mb-6">
-              Experience Sangeet Today
+              Your Journey Begins Here
             </h2>
             <p className="text-sangeet-neutral-400 text-xl mb-8 max-w-3xl mx-auto leading-relaxed">
-              Join us for an unforgettable journey through the authentic flavors and warm hospitality of South Asia
+              Whether it's a romantic dinner, family celebration, or corporate event, we're here to make it extraordinary. 
+              <span className="text-sangeet-400 font-semibold"> Reserve your table</span> and let us create memories that last a lifetime.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               {/* Primary CTA - Book Table */}
