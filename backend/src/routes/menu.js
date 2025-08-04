@@ -1,40 +1,88 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/database');
+
+// Mock data for menu items
+const mockMenuItems = [
+  {
+    id: 1,
+    name: 'Samosa',
+    description: 'Crispy pastry filled with spiced potatoes and peas',
+    price: 8.50,
+    category: 'Starters',
+    image_url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop',
+    is_vegetarian: true,
+    is_spicy: false,
+    is_popular: true
+  },
+  {
+    id: 2,
+    name: 'Butter Chicken',
+    description: 'Creamy tomato-based curry with tender chicken',
+    price: 28.00,
+    category: 'Main Courses',
+    image_url: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=300&fit=crop',
+    is_vegetarian: false,
+    is_spicy: false,
+    is_popular: true
+  },
+  {
+    id: 3,
+    name: 'Lamb Biryani',
+    description: 'Fragrant rice dish with tender lamb',
+    price: 32.00,
+    category: 'Main Courses',
+    image_url: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop',
+    is_vegetarian: false,
+    is_spicy: true,
+    is_popular: true
+  },
+  {
+    id: 4,
+    name: 'Momo Dumplings',
+    description: 'Steamed dumplings filled with minced meat',
+    price: 18.00,
+    category: 'Nepali Specialties',
+    image_url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop',
+    is_vegetarian: false,
+    is_spicy: false,
+    is_popular: true
+  },
+  {
+    id: 5,
+    name: 'Naan',
+    description: 'Soft leavened bread baked in tandoor',
+    price: 4.50,
+    category: 'Breads',
+    image_url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop',
+    is_vegetarian: true,
+    is_spicy: false,
+    is_popular: true
+  }
+];
 
 // Get all menu items
 router.get('/', async (req, res) => {
   try {
     const { category, vegetarian, spicy, popular } = req.query;
-    let query = 'SELECT * FROM menu_items';
-    const params = [];
-    let conditions = [];
+    let filteredItems = [...mockMenuItems];
 
     if (category) {
-      conditions.push(`category = $${params.length + 1}`);
-      params.push(category);
+      filteredItems = filteredItems.filter(item => item.category === category);
     }
 
     if (vegetarian === 'true') {
-      conditions.push('is_vegetarian = true');
+      filteredItems = filteredItems.filter(item => item.is_vegetarian);
     }
 
     if (spicy === 'true') {
-      conditions.push('is_spicy = true');
+      filteredItems = filteredItems.filter(item => item.is_spicy);
     }
 
     if (popular === 'true') {
-      conditions.push('is_popular = true');
+      filteredItems = filteredItems.filter(item => item.is_popular);
     }
 
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    query += ' ORDER BY category, name';
-
-    const result = await pool.query(query, params);
-    res.json(result.rows);
+    res.json(filteredItems);
   } catch (error) {
     console.error('Error fetching menu items:', error);
     res.status(500).json({ error: 'Failed to fetch menu items' });
@@ -45,11 +93,8 @@ router.get('/', async (req, res) => {
 router.get('/category/:category', async (req, res) => {
   try {
     const { category } = req.params;
-    const result = await pool.query(
-      'SELECT * FROM menu_items WHERE category = $1 ORDER BY name',
-      [category]
-    );
-    res.json(result.rows);
+    const filteredItems = mockMenuItems.filter(item => item.category === category);
+    res.json(filteredItems);
   } catch (error) {
     console.error('Error fetching menu items by category:', error);
     res.status(500).json({ error: 'Failed to fetch menu items' });
@@ -59,10 +104,8 @@ router.get('/category/:category', async (req, res) => {
 // Get popular menu items
 router.get('/popular', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM menu_items WHERE is_popular = true ORDER BY name'
-    );
-    res.json(result.rows);
+    const popularItems = mockMenuItems.filter(item => item.is_popular);
+    res.json(popularItems);
   } catch (error) {
     console.error('Error fetching popular menu items:', error);
     res.status(500).json({ error: 'Failed to fetch popular menu items' });
@@ -72,10 +115,8 @@ router.get('/popular', async (req, res) => {
 // Get menu categories
 router.get('/categories', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT DISTINCT category FROM menu_items ORDER BY category'
-    );
-    res.json(result.rows.map(row => row.category));
+    const categories = [...new Set(mockMenuItems.map(item => item.category))];
+    res.json(categories);
   } catch (error) {
     console.error('Error fetching categories:', error);
     res.status(500).json({ error: 'Failed to fetch categories' });
@@ -86,16 +127,13 @@ router.get('/categories', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query(
-      'SELECT * FROM menu_items WHERE id = $1',
-      [id]
-    );
+    const item = mockMenuItems.find(item => item.id === parseInt(id));
     
-    if (result.rows.length === 0) {
+    if (!item) {
       return res.status(404).json({ error: 'Menu item not found' });
     }
     
-    res.json(result.rows[0]);
+    res.json(item);
   } catch (error) {
     console.error('Error fetching menu item:', error);
     res.status(500).json({ error: 'Failed to fetch menu item' });

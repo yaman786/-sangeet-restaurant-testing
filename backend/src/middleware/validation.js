@@ -18,10 +18,6 @@ const reviewSchema = Joi.object({
   image_url: Joi.string().uri().optional()
 });
 
-const newsletterSchema = Joi.object({
-  email: Joi.string().email().required()
-});
-
 // Validation middleware
 const validateReservation = (req, res, next) => {
   const { error } = reservationSchema.validate(req.body);
@@ -45,19 +41,7 @@ const validateReview = (req, res, next) => {
   next();
 };
 
-const validateNewsletter = (req, res, next) => {
-  const { error } = newsletterSchema.validate(req.body);
-  if (error) {
-    return res.status(400).json({ 
-      error: 'Validation failed', 
-      details: error.details[0].message 
-    });
-  }
-  next();
-};
-
 module.exports = {
   validateReservation,
-  validateReview,
-  validateNewsletter
+  validateReview
 }; 

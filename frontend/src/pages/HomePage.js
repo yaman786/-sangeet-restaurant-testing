@@ -8,6 +8,7 @@ import logo from '../assets/images/logo.png';
  * HomePage Component
  * Main landing page for Sangeet Restaurant
  * Features: Hero section, dining areas, social proof, events, and journey story
+ * Enhanced mobile experience with touch gestures and optimized layouts
  * 
  * @param {Object} props - Component props
  * @param {Array} props.menuItems - Array of menu items
@@ -306,8 +307,8 @@ const HomePage = ({ menuItems, reviews, events }) => {
 
   const StatCard = ({ value, label }) => (
     <div className="text-center group hover:scale-105 transition-transform duration-300">
-      <div className="text-sm sm:text-base md:text-xl font-bold text-sangeet-400 mb-1 group-hover:text-sangeet-300 transition-colors">{value}</div>
-      <div className="text-xs text-sangeet-neutral-400 group-hover:text-sangeet-neutral-300 transition-colors">{label}</div>
+      <div className="text-sm sm:text-base md:text-xl font-bold text-yellow-300 mb-1 group-hover:text-yellow-200 transition-colors drop-shadow-lg">{value}</div>
+      <div className="text-xs text-orange-200 font-semibold group-hover:text-orange-100 transition-colors">{label}</div>
     </div>
   );
 
@@ -356,40 +357,40 @@ const HomePage = ({ menuItems, reviews, events }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleBookTable}
-            className="flex flex-col items-center space-y-1 bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 px-3 py-2 rounded-xl font-semibold hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-lg touch-manipulation"
+            className="flex flex-col items-center space-y-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-sangeet-neutral-950 px-3 py-2 rounded-xl font-bold hover:from-yellow-300 hover:to-orange-400 transition-all duration-300 shadow-lg touch-manipulation"
           >
             <span className="text-lg">📅</span>
-            <span className="text-xs">Book</span>
+            <span className="text-xs font-bold">Book</span>
           </motion.button>
           
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleViewMenu}
-            className="flex flex-col items-center space-y-1 bg-sangeet-neutral-800 text-sangeet-400 px-3 py-2 rounded-xl font-semibold hover:bg-sangeet-neutral-700 transition-all duration-300 border border-sangeet-neutral-600 touch-manipulation"
+            className="flex flex-col items-center space-y-1 bg-sangeet-neutral-800 text-yellow-300 px-3 py-2 rounded-xl font-bold hover:bg-sangeet-neutral-700 transition-all duration-300 border border-yellow-400/50 touch-manipulation"
           >
             <span className="text-lg">📋</span>
-            <span className="text-xs">Menu</span>
+            <span className="text-xs font-bold">Menu</span>
           </motion.button>
           
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleCallNow}
-            className="flex flex-col items-center space-y-1 bg-sangeet-neutral-800 text-sangeet-400 px-3 py-2 rounded-xl font-semibold hover:bg-sangeet-neutral-700 transition-all duration-300 border border-sangeet-neutral-600 touch-manipulation"
+            className="flex flex-col items-center space-y-1 bg-sangeet-neutral-800 text-orange-300 px-3 py-2 rounded-xl font-bold hover:bg-sangeet-neutral-700 transition-all duration-300 border border-orange-400/50 touch-manipulation"
           >
             <span className="text-lg">📞</span>
-            <span className="text-xs">Call</span>
+            <span className="text-xs font-bold">Call</span>
           </motion.button>
           
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleDirections}
-            className="flex flex-col items-center space-y-1 bg-sangeet-neutral-800 text-sangeet-400 px-3 py-2 rounded-xl font-semibold hover:bg-sangeet-neutral-700 transition-all duration-300 border border-sangeet-neutral-600 touch-manipulation"
+            className="flex flex-col items-center space-y-1 bg-sangeet-neutral-800 text-red-300 px-3 py-2 rounded-xl font-bold hover:bg-sangeet-neutral-700 transition-all duration-300 border border-red-400/50 touch-manipulation"
           >
             <span className="text-lg">📍</span>
-            <span className="text-xs">Map</span>
+            <span className="text-xs font-bold">Map</span>
           </motion.button>
         </motion.div>
       </div>
@@ -448,17 +449,17 @@ const HomePage = ({ menuItems, reviews, events }) => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="md:hidden mb-5"
           >
-            <div className="flex items-center justify-center space-x-4 bg-sangeet-neutral-900/90 backdrop-blur-md rounded-full px-4 py-3 border border-sangeet-neutral-700 max-w-sm mx-auto">
+            <div className="flex items-center justify-center space-x-4 bg-sangeet-neutral-900/90 backdrop-blur-md rounded-full px-4 py-3 border border-yellow-400/50 max-w-sm mx-auto shadow-lg">
               <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${isOpen ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
-                <span className={`text-xs font-semibold ${isOpen ? 'text-green-400' : 'text-red-400'}`}>
+                <div className={`w-3 h-3 rounded-full ${isOpen ? 'bg-green-400' : 'bg-red-400'} animate-pulse shadow-lg`}></div>
+                <span className={`text-xs font-bold ${isOpen ? 'text-green-300' : 'text-red-300'}`}>
                   {isOpen ? 'OPEN NOW' : 'CLOSED'}
                 </span>
               </div>
-              <div className="text-xs text-sangeet-neutral-400">
+              <div className="text-xs text-yellow-200 font-semibold">
                 {isOpen ? 'Closes at 11:00 PM' : 'Opens at 6:00 PM'}
               </div>
-              <div className="text-xs text-sangeet-neutral-400">
+              <div className="text-xs text-orange-200 font-semibold">
                 📍 Wanchai
               </div>
             </div>
@@ -492,7 +493,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
           >
             <span className="text-white">Experience</span>
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sangeet-300 via-sangeet-400 to-sangeet-red-400 drop-shadow-lg">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-300 to-red-400 drop-shadow-lg font-extrabold">
               South Asian Elegance
             </span>
           </motion.h1>
@@ -502,7 +503,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="text-base md:text-lg text-sangeet-neutral-300 mb-5 md:mb-8 max-w-2xl mx-auto px-4"
+            className="text-base md:text-lg text-sangeet-neutral-100 mb-5 md:mb-8 max-w-2xl mx-auto px-4 font-semibold"
           >
             Authentic South Asian cuisine in the heart of Hong Kong. Where tradition meets modern dining excellence.
           </motion.p>
@@ -512,7 +513,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex justify-center space-x-3 md:space-x-8 mb-4 md:mb-8 text-sangeet-neutral-300 px-4"
+            className="flex justify-center space-x-3 md:space-x-8 mb-4 md:mb-8 text-sangeet-neutral-200 px-4"
           >
             {HERO_STATS.map((stat, index) => (
               <StatCard key={index} value={stat.value} label={stat.label} />
@@ -687,13 +688,13 @@ const HomePage = ({ menuItems, reviews, events }) => {
               className="text-center mb-8"
             >
             <div className="flex justify-center mb-4">
-              <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-sangeet-red-500/20 to-sangeet-400/20 backdrop-blur-md border border-sangeet-red-500/30 rounded-full px-4 py-2">
+              <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-orange-500/30 to-red-500/30 backdrop-blur-md border border-orange-400/50 rounded-full px-4 py-2 shadow-lg">
                 <span className="text-xl">🔥</span>
-                <span className="text-sangeet-400 font-semibold text-sm">Today's Specials</span>
+                <span className="text-yellow-300 font-bold text-sm">Today's Specials</span>
               </div>
             </div>
-            <h2 className="text-2xl font-bold text-sangeet-400 mb-2">Chef's Daily Picks</h2>
-            <p className="text-sangeet-neutral-400 text-base">
+            <h2 className="text-2xl font-bold text-yellow-300 mb-2 drop-shadow-lg">Chef's Daily Picks</h2>
+            <p className="text-orange-200 font-semibold text-base">
               Limited time offers with authentic flavors
             </p>
           </motion.div>
@@ -745,14 +746,14 @@ const HomePage = ({ menuItems, reviews, events }) => {
                   
                   {/* Badge */}
                   <div className="absolute top-3 left-3">
-                    <div className="bg-gradient-to-r from-sangeet-red-500 to-sangeet-400 text-white px-2 py-1 rounded-full font-bold text-xs">
+                    <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full font-bold text-xs shadow-lg">
                       {special.badge}
                     </div>
                   </div>
                   
                   {/* Time Left */}
                   <div className="absolute top-3 right-3">
-                    <div className="bg-sangeet-neutral-900/90 backdrop-blur-sm text-sangeet-400 px-2 py-1 rounded-full font-semibold text-xs">
+                    <div className="bg-sangeet-neutral-900/90 backdrop-blur-sm text-yellow-300 px-2 py-1 rounded-full font-bold text-xs">
                       {special.timeLeft}
                     </div>
                   </div>
@@ -760,24 +761,24 @@ const HomePage = ({ menuItems, reviews, events }) => {
                   {/* Price */}
                   <div className="absolute bottom-3 right-3">
                     <div className="text-right">
-                      <div className="text-xl font-bold text-sangeet-400">{special.price}</div>
-                      <div className="text-xs text-sangeet-neutral-400 line-through">{special.originalPrice}</div>
+                      <div className="text-xl font-bold text-yellow-300 drop-shadow-lg">{special.price}</div>
+                      <div className="text-xs text-orange-200 line-through font-semibold">{special.originalPrice}</div>
                     </div>
                   </div>
                 </div>
                 
                 <div className="p-4 flex flex-col h-[200px]">
                   <div className="flex-grow">
-                    <h3 className="text-lg font-bold text-sangeet-400 mb-2 group-hover:text-sangeet-300 transition-colors line-clamp-1">
+                    <h3 className="text-lg font-bold text-yellow-300 mb-2 group-hover:text-yellow-200 transition-colors line-clamp-1 drop-shadow-lg">
                       {special.name}
                     </h3>
-                    <p className="text-sm text-sangeet-neutral-400 mb-4 line-clamp-2">{special.description}</p>
+                    <p className="text-sm text-orange-200 font-semibold mb-4 line-clamp-2">{special.description}</p>
                   </div>
                   <div className="mt-auto">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 py-3 rounded-xl font-semibold hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-lg hover:shadow-sangeet-400/25 touch-manipulation text-center"
+                      className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-sangeet-neutral-950 py-3 rounded-xl font-bold hover:from-yellow-300 hover:to-orange-400 transition-all duration-300 shadow-lg hover:shadow-orange-400/25 touch-manipulation text-center"
                     >
                       Order Now - Save ${parseInt(special.originalPrice.slice(1)) - parseInt(special.price.slice(1))}
                     </motion.button>
@@ -866,12 +867,12 @@ const HomePage = ({ menuItems, reviews, events }) => {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-sangeet-400/20 to-sangeet-red-500/20 backdrop-blur-md border border-sangeet-400/30 rounded-full px-6 py-2 mb-4">
+            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-yellow-400/30 to-orange-500/30 backdrop-blur-md border border-yellow-400/50 rounded-full px-6 py-2 mb-4 shadow-lg">
               <span className="text-2xl">✨</span>
-              <span className="text-sangeet-400 font-semibold">Our Atmosphere</span>
+              <span className="text-yellow-300 font-bold">Our Atmosphere</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sangeet-300 via-sangeet-400 to-sangeet-red-400 drop-shadow-lg mb-4">Where Tradition Meets Elegance</h2>
-            <p className="text-sangeet-neutral-400 text-lg max-w-3xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-300 to-red-400 drop-shadow-lg mb-4">Where Tradition Meets Elegance</h2>
+            <p className="text-orange-200 font-semibold text-lg max-w-3xl mx-auto">
               Experience the perfect blend of authentic South Asian hospitality and modern dining sophistication
             </p>
           </motion.div>
@@ -1078,7 +1079,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
 
             {/* Atmosphere Highlights - Mobile */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-sangeet-400 text-center">Atmosphere Highlights</h3>
+              <h3 className="text-xl font-bold text-yellow-300 text-center drop-shadow-lg">Atmosphere Highlights</h3>
               {[
                 {
                   icon: "🕯️",
@@ -1101,12 +1102,12 @@ const HomePage = ({ menuItems, reviews, events }) => {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="flex items-start space-x-4 p-4 bg-sangeet-neutral-800/50 backdrop-blur-md rounded-xl border border-sangeet-neutral-700"
+                  className="flex items-start space-x-4 p-4 bg-sangeet-neutral-800/50 backdrop-blur-md rounded-xl border border-yellow-400/30 shadow-lg"
                 >
                   <div className="text-2xl">{feature.icon}</div>
                   <div>
-                    <h4 className="text-sangeet-400 font-bold text-base mb-1">{feature.title}</h4>
-                    <p className="text-sangeet-neutral-300 text-sm">{feature.description}</p>
+                    <h4 className="text-yellow-300 font-bold text-base mb-1 drop-shadow-lg">{feature.title}</h4>
+                    <p className="text-orange-200 font-semibold text-sm">{feature.description}</p>
                   </div>
                 </motion.div>
               ))}
@@ -1610,13 +1611,13 @@ const HomePage = ({ menuItems, reviews, events }) => {
               <h2 className="text-5xl md:text-6xl font-bold mb-6">
                 <span className="text-white">Ready to Experience</span>
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sangeet-400 to-sangeet-red-500">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-red-400 drop-shadow-lg">
                   Authentic Flavors?
                 </span>
               </h2>
-              <p className="text-xl md:text-2xl text-sangeet-neutral-300 mb-8 max-w-4xl mx-auto leading-relaxed">
+              <p className="text-xl md:text-2xl text-orange-200 font-semibold mb-8 max-w-4xl mx-auto leading-relaxed">
                 Book your table today and embark on a culinary journey through India and Nepal. 
-                <span className="text-sangeet-400 font-semibold"> Every meal is a celebration of culture and tradition.</span>
+                <span className="text-yellow-300 font-bold"> Every meal is a celebration of culture and tradition.</span>
               </p>
             </div>
 
@@ -1629,7 +1630,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
               >
                 <Link
                   to="/reservations"
-                  className="flex items-center justify-center space-x-3 bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 px-6 py-4 md:px-10 md:py-5 rounded-2xl font-bold text-lg md:text-xl hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-2xl hover:shadow-sangeet-400/30 touch-manipulation min-h-[56px]"
+                  className="flex items-center justify-center space-x-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-sangeet-neutral-950 px-6 py-4 md:px-10 md:py-5 rounded-2xl font-bold text-lg md:text-xl hover:from-yellow-300 hover:to-orange-400 transition-all duration-300 shadow-2xl hover:shadow-orange-400/30 touch-manipulation min-h-[56px]"
                 >
                   <span className="text-xl md:text-2xl">📅</span>
                   <span>Book Your Table</span>
@@ -1650,7 +1651,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
               >
                 <Link
                   href="tel:+85223456789"
-                  className="flex items-center justify-center space-x-3 border-2 border-sangeet-red-500 text-sangeet-red-400 px-6 py-4 md:px-10 md:py-5 rounded-2xl font-bold text-lg md:text-xl hover:bg-sangeet-red-500 hover:text-white transition-all duration-300 shadow-2xl hover:shadow-sangeet-red-500/30 backdrop-blur-sm touch-manipulation min-h-[56px]"
+                  className="flex items-center justify-center space-x-3 border-2 border-red-500 text-red-300 px-6 py-4 md:px-10 md:py-5 rounded-2xl font-bold text-lg md:text-xl hover:bg-red-500 hover:text-white transition-all duration-300 shadow-2xl hover:shadow-red-500/30 backdrop-blur-sm touch-manipulation min-h-[56px]"
                 >
                   <span className="text-xl md:text-2xl">📞</span>
                   <span>Call Now</span>

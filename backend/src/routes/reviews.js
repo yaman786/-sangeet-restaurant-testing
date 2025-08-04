@@ -1,110 +1,117 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/database');
-const { validateReview } = require('../middleware/validation');
+
+// Mock data for reviews
+const mockReviews = [
+  {
+    id: 1,
+    customer_name: 'Anika Sharma',
+    review_text: 'Sangeet offers an unparalleled dining experience. The Butter Chicken is a must-try! ★★★★★',
+    rating: 5,
+    image_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+    is_verified: true,
+    created_at: '2024-01-15T10:30:00Z'
+  },
+  {
+    id: 2,
+    customer_name: 'Rohan Kapoor',
+    review_text: 'The ambiance is lovely, and the food is generally good. I especially enjoyed the momos. ★★★★',
+    rating: 4,
+    image_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+    is_verified: true,
+    created_at: '2024-01-10T14:20:00Z'
+  },
+  {
+    id: 3,
+    customer_name: 'Priya Patel',
+    review_text: 'Authentic flavors that remind me of home. The service is excellent and the atmosphere is perfect for family dinners. ★★★★★',
+    rating: 5,
+    image_url: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+    is_verified: true,
+    created_at: '2024-01-08T19:15:00Z'
+  },
+  {
+    id: 4,
+    customer_name: 'David Chen',
+    review_text: 'Great fusion of Indian and Nepali cuisine. The biryani was exceptional! ★★★★',
+    rating: 4,
+    image_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+    is_verified: true,
+    created_at: '2024-01-05T12:45:00Z'
+  },
+  {
+    id: 5,
+    customer_name: 'Sarah Johnson',
+    review_text: 'Lovely vegetarian options. The palak paneer was delicious and the naan was perfect. ★★★★★',
+    rating: 5,
+    image_url: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+    is_verified: true,
+    created_at: '2024-01-03T18:30:00Z'
+  }
+];
 
 // Get all reviews
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM customer_reviews ORDER BY created_at DESC'
-    );
-    res.json(result.rows);
+    res.json(mockReviews);
   } catch (error) {
     console.error('Error fetching reviews:', error);
     res.status(500).json({ error: 'Failed to fetch reviews' });
   }
 });
 
-// Get verified reviews only
+// Get verified reviews
 router.get('/verified', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM customer_reviews WHERE is_verified = true ORDER BY created_at DESC'
-    );
-    res.json(result.rows);
+    const verifiedReviews = mockReviews.filter(review => review.is_verified);
+    res.json(verifiedReviews);
   } catch (error) {
     console.error('Error fetching verified reviews:', error);
-    res.status(500).json({ error: 'Failed to fetch reviews' });
+    res.status(500).json({ error: 'Failed to fetch verified reviews' });
   }
 });
 
-// Get reviews by rating
-router.get('/rating/:rating', async (req, res) => {
+// Submit a new review
+router.post('/', async (req, res) => {
   try {
-    const { rating } = req.params;
-    const ratingNum = parseInt(rating);
+    const { customer_name, review_text, rating, image_url } = req.body;
     
-    if (ratingNum < 1 || ratingNum > 5) {
-      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
-    }
-
-    const result = await pool.query(
-      'SELECT * FROM customer_reviews WHERE rating = $1 ORDER BY created_at DESC',
-      [ratingNum]
-    );
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching reviews by rating:', error);
-    res.status(500).json({ error: 'Failed to fetch reviews' });
-  }
-});
-
-// Create a new review
-router.post('/', validateReview, async (req, res) => {
-  try {
-    const {
+    const newReview = {
+      id: mockReviews.length + 1,
       customer_name,
       review_text,
       rating,
-      image_url
-    } = req.body;
-
-    const result = await pool.query(
-      `INSERT INTO customer_reviews 
-       (customer_name, review_text, rating, image_url) 
-       VALUES ($1, $2, $3, $4) 
-       RETURNING *`,
-      [customer_name, review_text, rating, image_url]
-    );
-
+      image_url: image_url || null,
+      is_verified: false,
+      created_at: new Date().toISOString()
+    };
+    
+    mockReviews.push(newReview);
+    
     res.status(201).json({
       message: 'Review submitted successfully',
-      review: result.rows[0]
+      review: newReview
     });
   } catch (error) {
-    console.error('Error creating review:', error);
+    console.error('Error submitting review:', error);
     res.status(500).json({ error: 'Failed to submit review' });
   }
 });
 
-// Get average rating
-router.get('/stats/average', async (req, res) => {
+// Get single review
+router.get('/:id', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT AVG(rating) as average_rating, COUNT(*) as total_reviews FROM customer_reviews WHERE is_verified = true'
-    );
-    res.json(result.rows[0]);
+    const { id } = req.params;
+    const review = mockReviews.find(review => review.id === parseInt(id));
+    
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+    
+    res.json(review);
   } catch (error) {
-    console.error('Error fetching average rating:', error);
-    res.status(500).json({ error: 'Failed to fetch rating stats' });
-  }
-});
-
-// Get rating distribution
-router.get('/stats/distribution', async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT rating, COUNT(*) as count 
-       FROM customer_reviews 
-       WHERE is_verified = true 
-       GROUP BY rating 
-       ORDER BY rating DESC`
-    );
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching rating distribution:', error);
-    res.status(500).json({ error: 'Failed to fetch rating distribution' });
+    console.error('Error fetching review:', error);
+    res.status(500).json({ error: 'Failed to fetch review' });
   }
 });
 

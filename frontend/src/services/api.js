@@ -47,26 +47,6 @@ export const fetchMenuItems = async (filters = {}) => {
   }
 };
 
-export const fetchMenuCategories = async () => {
-  try {
-    const response = await api.get('/menu/categories');
-    return response;
-  } catch (error) {
-    console.error('Error fetching menu categories:', error);
-    return [];
-  }
-};
-
-export const fetchPopularMenuItems = async () => {
-  try {
-    const response = await api.get('/menu/popular');
-    return response;
-  } catch (error) {
-    console.error('Error fetching popular menu items:', error);
-    return [];
-  }
-};
-
 // Reviews API calls
 export const fetchReviews = async () => {
   try {
@@ -74,16 +54,6 @@ export const fetchReviews = async () => {
     return response;
   } catch (error) {
     console.error('Error fetching reviews:', error);
-    return [];
-  }
-};
-
-export const fetchVerifiedReviews = async () => {
-  try {
-    const response = await api.get('/reviews/verified');
-    return response;
-  } catch (error) {
-    console.error('Error fetching verified reviews:', error);
     return [];
   }
 };
@@ -109,16 +79,6 @@ export const createReservation = async (reservationData) => {
   }
 };
 
-export const fetchReservations = async () => {
-  try {
-    const response = await api.get('/reservations');
-    return response;
-  } catch (error) {
-    console.error('Error fetching reservations:', error);
-    return [];
-  }
-};
-
 // Events API calls
 export const fetchEvents = async () => {
   try {
@@ -127,58 +87,6 @@ export const fetchEvents = async () => {
   } catch (error) {
     console.error('Error fetching events:', error);
     return [];
-  }
-};
-
-export const fetchFeaturedEvents = async () => {
-  try {
-    const response = await api.get('/events/featured');
-    return response;
-  } catch (error) {
-    console.error('Error fetching featured events:', error);
-    return [];
-  }
-};
-
-export const fetchUpcomingEvents = async () => {
-  try {
-    const response = await api.get('/events/upcoming');
-    return response;
-  } catch (error) {
-    console.error('Error fetching upcoming events:', error);
-    return [];
-  }
-};
-
-// Newsletter API calls
-export const subscribeToNewsletter = async (email) => {
-  try {
-    const response = await api.post('/newsletter/subscribe', { email });
-    return response;
-  } catch (error) {
-    console.error('Error subscribing to newsletter:', error);
-    throw error;
-  }
-};
-
-export const unsubscribeFromNewsletter = async (email) => {
-  try {
-    const response = await api.post('/newsletter/unsubscribe', { email });
-    return response;
-  } catch (error) {
-    console.error('Error unsubscribing from newsletter:', error);
-    throw error;
-  }
-};
-
-// Health check
-export const checkApiHealth = async () => {
-  try {
-    const response = await api.get('/health');
-    return response;
-  } catch (error) {
-    console.error('API health check failed:', error);
-    return null;
   }
 };
 

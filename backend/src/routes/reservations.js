@@ -1,10 +1,46 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/database');
-const { validateReservation } = require('../middleware/validation');
+
+// Mock data for reservations
+let mockReservations = [
+  {
+    id: 1,
+    customer_name: 'John Doe',
+    email: 'john@example.com',
+    phone: '+85212345678',
+    date: '2024-01-20',
+    time: '19:00',
+    guests: 4,
+    special_requests: 'Window seat preferred',
+    status: 'confirmed',
+    created_at: '2024-01-15T10:30:00Z'
+  },
+  {
+    id: 2,
+    customer_name: 'Jane Smith',
+    email: 'jane@example.com',
+    phone: '+85287654321',
+    date: '2024-01-22',
+    time: '20:00',
+    guests: 2,
+    special_requests: null,
+    status: 'pending',
+    created_at: '2024-01-16T14:20:00Z'
+  }
+];
+
+// Get all reservations
+router.get('/', async (req, res) => {
+  try {
+    res.json(mockReservations);
+  } catch (error) {
+    console.error('Error fetching reservations:', error);
+    res.status(500).json({ error: 'Failed to fetch reservations' });
+  }
+});
 
 // Create a new reservation
-router.post('/', validateReservation, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const {
       customer_name,
@@ -16,17 +52,24 @@ router.post('/', validateReservation, async (req, res) => {
       special_requests
     } = req.body;
 
-    const result = await pool.query(
-      `INSERT INTO reservations 
-       (customer_name, email, phone, date, time, guests, special_requests) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) 
-       RETURNING *`,
-      [customer_name, email, phone, date, time, guests, special_requests]
-    );
+    const newReservation = {
+      id: mockReservations.length + 1,
+      customer_name,
+      email,
+      phone,
+      date,
+      time,
+      guests,
+      special_requests: special_requests || null,
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
+
+    mockReservations.push(newReservation);
 
     res.status(201).json({
       message: 'Reservation created successfully',
-      reservation: result.rows[0]
+      reservation: newReservation
     });
   } catch (error) {
     console.error('Error creating reservation:', error);
@@ -34,31 +77,20 @@ router.post('/', validateReservation, async (req, res) => {
   }
 });
 
-// Get all reservations (admin only)
-router.get('/', async (req, res) => {
+// Get reservation by ID
+router.get('/:id', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM reservations ORDER BY date DESC, time DESC'
-    );
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching reservations:', error);
-    res.status(500).json({ error: 'Failed to fetch reservations' });
-  }
-});
+    const { id } = req.params;
+    const reservation = mockReservations.find(res => res.id === parseInt(id));
 
-// Get reservations by date
-router.get('/date/:date', async (req, res) => {
-  try {
-    const { date } = req.params;
-    const result = await pool.query(
-      'SELECT * FROM reservations WHERE date = $1 ORDER BY time',
-      [date]
-    );
-    res.json(result.rows);
+    if (!reservation) {
+      return res.status(404).json({ error: 'Reservation not found' });
+    }
+
+    res.json(reservation);
   } catch (error) {
-    console.error('Error fetching reservations by date:', error);
-    res.status(500).json({ error: 'Failed to fetch reservations' });
+    console.error('Error fetching reservation:', error);
+    res.status(500).json({ error: 'Failed to fetch reservation' });
   }
 });
 
@@ -68,22 +100,17 @@ router.patch('/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status' });
-    }
+    const reservation = mockReservations.find(res => res.id === parseInt(id));
 
-    const result = await pool.query(
-      'UPDATE reservations SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
-    );
-
-    if (result.rows.length === 0) {
+    if (!reservation) {
       return res.status(404).json({ error: 'Reservation not found' });
     }
 
+    reservation.status = status;
+
     res.json({
       message: 'Reservation status updated successfully',
-      reservation: result.rows[0]
+      reservation
     });
   } catch (error) {
     console.error('Error updating reservation status:', error);
@@ -91,23 +118,22 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
-// Get reservation by ID
-router.get('/:id', async (req, res) => {
+// Delete reservation
+router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query(
-      'SELECT * FROM reservations WHERE id = $1',
-      [id]
-    );
+    const reservationIndex = mockReservations.findIndex(res => res.id === parseInt(id));
 
-    if (result.rows.length === 0) {
+    if (reservationIndex === -1) {
       return res.status(404).json({ error: 'Reservation not found' });
     }
 
-    res.json(result.rows[0]);
+    mockReservations.splice(reservationIndex, 1);
+
+    res.json({ message: 'Reservation deleted successfully' });
   } catch (error) {
-    console.error('Error fetching reservation:', error);
-    res.status(500).json({ error: 'Failed to fetch reservation' });
+    console.error('Error deleting reservation:', error);
+    res.status(500).json({ error: 'Failed to delete reservation' });
   }
 });
 

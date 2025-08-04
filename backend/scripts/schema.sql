@@ -56,14 +56,6 @@ CREATE TABLE IF NOT EXISTS events (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Newsletter Subscribers Table
-CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    is_active BOOLEAN DEFAULT true,
-    subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Insert sample menu items
 INSERT INTO menu_items (name, description, price, category, image_url, is_vegetarian, is_spicy, is_popular) VALUES
 -- Starters

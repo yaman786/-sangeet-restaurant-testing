@@ -6,7 +6,7 @@ const compression = require('compression');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(helmet());
@@ -26,15 +26,14 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Database connection
-const pool = require('./config/database');
+// Database connection - temporarily disabled for testing
+// const pool = require('./config/database');
 
 // Routes
 app.use('/api/menu', require('./routes/menu'));
 app.use('/api/reservations', require('./routes/reservations'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/events', require('./routes/events'));
-app.use('/api/newsletter', require('./routes/newsletter'));
 
 // Health check
 app.get('/api/health', (req, res) => {
