@@ -492,7 +492,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
           >
             <span className="text-white">Experience</span>
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sangeet-400 to-sangeet-red-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sangeet-300 via-sangeet-400 to-sangeet-red-400 drop-shadow-lg">
               South Asian Elegance
             </span>
           </motion.h1>
@@ -870,7 +870,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
               <span className="text-2xl">✨</span>
               <span className="text-sangeet-400 font-semibold">Our Atmosphere</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-sangeet-400 mb-4">Where Tradition Meets Elegance</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sangeet-300 via-sangeet-400 to-sangeet-red-400 drop-shadow-lg mb-4">Where Tradition Meets Elegance</h2>
             <p className="text-sangeet-neutral-400 text-lg max-w-3xl mx-auto">
               Experience the perfect blend of authentic South Asian hospitality and modern dining sophistication
             </p>
