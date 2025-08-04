@@ -69,19 +69,20 @@ const Header = () => {
               </Link>
             ))}
             
-            {/* Open/Close Status - Desktop */}
-            <div className="flex items-center space-x-2 bg-sangeet-neutral-800/50 backdrop-blur-sm rounded-full px-4 py-2 border border-sangeet-neutral-600/30">
-              <div className={`w-3 h-3 rounded-full ${isOpen ? 'bg-green-400' : 'bg-red-400'} animate-pulse shadow-sm`}></div>
-              <span className={`text-sm font-semibold ${isOpen ? 'text-green-400' : 'text-red-400'}`}>
-                {isOpen ? 'OPEN' : 'CLOSED'}
-              </span>
-              <span className="text-xs text-sangeet-neutral-400">
-                {currentTime.toLocaleTimeString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  hour12: true
-                })}
-              </span>
+            {/* Enhanced Open/Close Status - Desktop */}
+            <div className="flex items-center space-x-4 bg-sangeet-neutral-800/50 backdrop-blur-sm rounded-full px-4 py-2 border border-sangeet-neutral-600/30">
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${isOpen ? 'bg-green-400' : 'bg-red-400'} animate-pulse shadow-sm`}></div>
+                <span className={`text-sm font-semibold ${isOpen ? 'text-green-400' : 'text-red-400'}`}>
+                  {isOpen ? 'OPEN NOW' : 'CLOSED'}
+                </span>
+              </div>
+              <div className="text-xs text-sangeet-neutral-400">
+                {isOpen ? 'Closes at 11:00 PM' : 'Opens at 6:00 PM'}
+              </div>
+              <div className="text-xs text-sangeet-neutral-400">
+                📍 Wanchai
+              </div>
             </div>
           </nav>
 
@@ -146,6 +147,8 @@ const Header = () => {
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden border-t border-sangeet-neutral-800 bg-sangeet-neutral-900/95 backdrop-blur-md"
           >
+
+            
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navItems.map((item) => (
                 <Link

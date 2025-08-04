@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Toaster } from 'react-hot-toast';
 
 // Components
 import Header from './components/Header';
@@ -147,7 +146,6 @@ function App() {
       </AnimatePresence>
       
       <Footer />
-      <Toaster position="top-right" />
     </div>
   );
 }

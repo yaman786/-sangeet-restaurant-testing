@@ -1,14 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/sangeet_restaurant',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const pool = require('../config/database');
+const { validateReservation } = require('../middleware/validation');
 
 // Create a new reservation
-router.post('/', async (req, res) => {
+router.post('/', validateReservation, async (req, res) => {
   try {
     const {
       customer_name,
@@ -19,25 +15,6 @@ router.post('/', async (req, res) => {
       guests,
       special_requests
     } = req.body;
-
-    // Basic validation
-    if (!customer_name || !email || !date || !time || !guests) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Check if date is in the future
-    const reservationDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (reservationDate < today) {
-      return res.status(400).json({ error: 'Reservation date must be in the future' });
-    }
-
-    // Check if guests is a valid number
-    if (guests < 1 || guests > 20) {
-      return res.status(400).json({ error: 'Number of guests must be between 1 and 20' });
-    }
 
     const result = await pool.query(
       `INSERT INTO reservations 

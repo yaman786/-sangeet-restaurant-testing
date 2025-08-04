@@ -1,11 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/sangeet_restaurant',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const pool = require('../config/database');
+const { validateReview } = require('../middleware/validation');
 
 // Get all reviews
 router.get('/', async (req, res) => {
@@ -55,7 +51,7 @@ router.get('/rating/:rating', async (req, res) => {
 });
 
 // Create a new review
-router.post('/', async (req, res) => {
+router.post('/', validateReview, async (req, res) => {
   try {
     const {
       customer_name,
@@ -63,15 +59,6 @@ router.post('/', async (req, res) => {
       rating,
       image_url
     } = req.body;
-
-    // Basic validation
-    if (!customer_name || !review_text || !rating) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
-    }
 
     const result = await pool.query(
       `INSERT INTO customer_reviews 

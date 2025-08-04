@@ -1,21 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/sangeet_restaurant',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const pool = require('../config/database');
+const { validateNewsletter } = require('../middleware/validation');
 
 // Subscribe to newsletter
-router.post('/subscribe', async (req, res) => {
+router.post('/subscribe', validateNewsletter, async (req, res) => {
   try {
     const { email } = req.body;
-
-    // Basic email validation
-    if (!email || !email.includes('@')) {
-      return res.status(400).json({ error: 'Valid email is required' });
-    }
 
     // Check if already subscribed
     const existingSubscriber = await pool.query(
@@ -53,13 +44,9 @@ router.post('/subscribe', async (req, res) => {
 });
 
 // Unsubscribe from newsletter
-router.post('/unsubscribe', async (req, res) => {
+router.post('/unsubscribe', validateNewsletter, async (req, res) => {
   try {
     const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
-    }
 
     const result = await pool.query(
       'UPDATE newsletter_subscribers SET is_active = false WHERE email = $1 RETURNING *',

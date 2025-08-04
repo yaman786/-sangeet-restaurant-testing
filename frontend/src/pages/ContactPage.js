@@ -13,7 +13,7 @@ const ContactPage = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log('Contact form data:', data);
+  
       toast.success('Message sent successfully! We will get back to you soon.');
       reset();
     } catch (error) {

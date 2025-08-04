@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import logo from '../assets/images/logo.png';
@@ -14,15 +15,43 @@ import logo from '../assets/images/logo.png';
  * @param {Array} props.events - Array of upcoming events
  */
 const HomePage = ({ menuItems, reviews, events }) => {
+  const navigate = useNavigate();
+  
+  // Navigation functions for quick actions
+  const handleBookTable = () => {
+    navigate('/reservations');
+  };
+  
+  const handleViewMenu = () => {
+    navigate('/menu');
+  };
+  
+  const handleCallNow = () => {
+    window.location.href = 'tel:+85223456789';
+  };
+  
+  const handleDirections = () => {
+    // Open Google Maps with restaurant location
+    const address = encodeURIComponent('Wanchai, Hong Kong');
+    const url = `https://www.google.com/maps/search/?api=1&query=${address}`;
+    window.open(url, '_blank');
+  };
+  
   // State management for carousel functionality
   const [currentSlide, setCurrentSlide] = useState(0);
   const [mobileCurrentSlide, setMobileCurrentSlide] = useState(0);
   const [currentEventsSlide, setCurrentEventsSlide] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [showMobileSpecials, setShowMobileSpecials] = useState(false);
+  const [showMobileContent, setShowMobileContent] = useState(false);
 
   // Scroll animations for hero section
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 300], [0, 100]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+
+  // Restaurant operating hours and status
+  const isOpen = currentTime.getHours() >= 18 && currentTime.getHours() < 23;
 
   // Constants for reusable data
   const DINING_AREAS = [
@@ -229,6 +258,33 @@ const HomePage = ({ menuItems, reviews, events }) => {
     };
   }, []);
 
+  // Real-time clock update
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Show mobile content progressively for premium experience
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setShowMobileSpecials(true);
+        setShowMobileContent(true);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      setShowMobileSpecials(true);
+      setShowMobileContent(true);
+    }, 5000); // Reduced to 5 seconds for better UX
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
 
 
   // Reusable components
@@ -250,7 +306,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
 
   const StatCard = ({ value, label }) => (
     <div className="text-center group hover:scale-105 transition-transform duration-300">
-      <div className="text-base sm:text-lg md:text-xl font-bold text-sangeet-400 mb-1 group-hover:text-sangeet-300 transition-colors">{value}</div>
+      <div className="text-sm sm:text-base md:text-xl font-bold text-sangeet-400 mb-1 group-hover:text-sangeet-300 transition-colors">{value}</div>
       <div className="text-xs text-sangeet-neutral-400 group-hover:text-sangeet-neutral-300 transition-colors">{label}</div>
     </div>
   );
@@ -281,10 +337,10 @@ const HomePage = ({ menuItems, reviews, events }) => {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="flex items-center space-x-4 bg-gradient-to-r from-sangeet-neutral-950/98 to-sangeet-neutral-900/98 backdrop-blur-2xl rounded-full px-8 py-4 border border-sangeet-neutral-600/50 shadow-2xl shadow-black/50"
         >
-          <QuickActionButton icon="📅" text="Book Table" isPrimary={true} />
-          <QuickActionButton icon="📋" text="View Menu" />
-          <QuickActionButton icon="📞" text="Call Now" />
-          <QuickActionButton icon="📍" text="Directions" />
+          <QuickActionButton icon="📅" text="Book Table" isPrimary={true} onClick={handleBookTable} />
+          <QuickActionButton icon="📋" text="View Menu" onClick={handleViewMenu} />
+          <QuickActionButton icon="📞" text="Call Now" onClick={handleCallNow} />
+          <QuickActionButton icon="📍" text="Directions" onClick={handleDirections} />
         </motion.div>
       </div>
 
@@ -299,6 +355,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={handleBookTable}
             className="flex flex-col items-center space-y-1 bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 px-3 py-2 rounded-xl font-semibold hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-lg touch-manipulation"
           >
             <span className="text-lg">📅</span>
@@ -308,6 +365,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={handleViewMenu}
             className="flex flex-col items-center space-y-1 bg-sangeet-neutral-800 text-sangeet-400 px-3 py-2 rounded-xl font-semibold hover:bg-sangeet-neutral-700 transition-all duration-300 border border-sangeet-neutral-600 touch-manipulation"
           >
             <span className="text-lg">📋</span>
@@ -317,6 +375,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={handleCallNow}
             className="flex flex-col items-center space-y-1 bg-sangeet-neutral-800 text-sangeet-400 px-3 py-2 rounded-xl font-semibold hover:bg-sangeet-neutral-700 transition-all duration-300 border border-sangeet-neutral-600 touch-manipulation"
           >
             <span className="text-lg">📞</span>
@@ -326,6 +385,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={handleDirections}
             className="flex flex-col items-center space-y-1 bg-sangeet-neutral-800 text-sangeet-400 px-3 py-2 rounded-xl font-semibold hover:bg-sangeet-neutral-700 transition-all duration-300 border border-sangeet-neutral-600 touch-manipulation"
           >
             <span className="text-lg">📍</span>
@@ -335,7 +395,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
       </div>
 
       {/* Enhanced Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[75vh] md:h-screen flex items-center justify-center overflow-hidden py-6 md:py-0">
         {/* Video Background */}
         <div className="absolute inset-0">
           <video
@@ -358,24 +418,65 @@ const HomePage = ({ menuItems, reviews, events }) => {
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-sangeet-neutral-900/80 via-sangeet-neutral-800/70 to-sangeet-neutral-900/80 z-10"></div>
         
-        {/* Main Content */}
+        {/* Mobile Scroll Indicator - Bottom Right */}
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-6 right-6 z-20 md:hidden"
+        >
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-6 h-10 border-2 border-white/60 rounded-full flex justify-center">
+              <motion.div
+                animate={{ y: [0, 12, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="w-1 h-3 bg-white/80 rounded-full mt-2"
+              />
+            </div>
+            <span className="text-xs text-white/70 font-medium">Scroll</span>
+          </div>
+        </motion.div>
+        
+                {/* Main Content */}
         <motion.div
           style={{ y, opacity }}
-          className="relative z-20 text-center text-white px-4 max-w-6xl mx-auto pt-48"
+          className="relative z-20 text-center text-white px-4 max-w-6xl mx-auto pt-16 md:pt-48"
         >
+          {/* Status Bar - Mobile Only */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="md:hidden mb-5"
+          >
+            <div className="flex items-center justify-center space-x-4 bg-sangeet-neutral-900/90 backdrop-blur-md rounded-full px-4 py-3 border border-sangeet-neutral-700 max-w-sm mx-auto">
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${isOpen ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
+                <span className={`text-xs font-semibold ${isOpen ? 'text-green-400' : 'text-red-400'}`}>
+                  {isOpen ? 'OPEN NOW' : 'CLOSED'}
+                </span>
+              </div>
+              <div className="text-xs text-sangeet-neutral-400">
+                {isOpen ? 'Closes at 11:00 PM' : 'Opens at 6:00 PM'}
+              </div>
+              <div className="text-xs text-sangeet-neutral-400">
+                📍 Wanchai
+              </div>
+            </div>
+          </motion.div>
+
           {/* Logo Animation */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 1, delay: 0.2 }}
-            className="mb-8"
+            className="mb-6 md:mb-8"
           >
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-gradient-to-r from-sangeet-400/80 to-sangeet-red-500/80 rounded-full blur-3xl animate-pulse"></div>
               <img 
                 src={logo} 
                 alt="Sangeet Restaurant" 
-                className="relative h-16 sm:h-18 md:h-20 lg:h-24 w-auto logo-navbar-dark drop-shadow-2xl brightness-150 contrast-150"
+                className="relative h-12 sm:h-14 md:h-20 lg:h-24 w-auto logo-navbar-dark drop-shadow-2xl brightness-150 contrast-150"
               />
             </div>
           </motion.div>
@@ -387,7 +488,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 md:mb-6 px-4"
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-4 md:mb-6 px-4"
           >
             <span className="text-white">Experience</span>
             <br />
@@ -401,7 +502,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="text-base md:text-lg text-sangeet-neutral-300 mb-6 md:mb-8 max-w-2xl mx-auto px-4"
+            className="text-base md:text-lg text-sangeet-neutral-300 mb-5 md:mb-8 max-w-2xl mx-auto px-4"
           >
             Authentic South Asian cuisine in the heart of Hong Kong. Where tradition meets modern dining excellence.
           </motion.p>
@@ -411,7 +512,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex justify-center space-x-4 md:space-x-8 mb-6 md:mb-8 text-sangeet-neutral-300 px-4"
+            className="flex justify-center space-x-3 md:space-x-8 mb-4 md:mb-8 text-sangeet-neutral-300 px-4"
           >
             {HERO_STATS.map((stat, index) => (
               <StatCard key={index} value={stat.value} label={stat.label} />
@@ -437,11 +538,11 @@ const HomePage = ({ menuItems, reviews, events }) => {
 
         </motion.div>
 
-        {/* Scroll Indicator */}
+        {/* Scroll Indicator - Hidden on Mobile */}
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 3, repeat: Infinity }}
-          className="absolute bottom-20 right-6 z-20"
+          className="absolute bottom-20 right-6 z-20 hidden md:block"
         >
           <div className="flex flex-col items-center space-y-2 text-sangeet-neutral-300 bg-sangeet-neutral-900/40 backdrop-blur-md rounded-full px-4 py-3 border border-sangeet-neutral-600/30 shadow-lg">
             <span className="text-sm font-medium tracking-wide">Scroll to explore</span>
@@ -465,10 +566,12 @@ const HomePage = ({ menuItems, reviews, events }) => {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-sangeet-red-500/20 to-sangeet-400/20 backdrop-blur-md border border-sangeet-red-500/30 rounded-full px-6 py-2 mb-4">
-              <span className="text-2xl">🔥</span>
-              <span className="text-sangeet-400 font-semibold">Today's Specials</span>
-              <span className="text-sangeet-neutral-400 text-sm">Limited Time</span>
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-sangeet-red-500/20 to-sangeet-400/20 backdrop-blur-md border border-sangeet-red-500/30 rounded-full px-6 py-2">
+                <span className="text-2xl">🔥</span>
+                <span className="text-sangeet-400 font-semibold">Today's Specials</span>
+                <span className="text-sangeet-neutral-400 text-sm">Limited Time</span>
+              </div>
             </div>
             <h2 className="text-4xl font-bold text-sangeet-400 mb-4">Chef's Daily Recommendations</h2>
             <p className="text-sangeet-neutral-400 text-lg max-w-3xl mx-auto">
@@ -512,7 +615,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ y: -5, scale: 1.02 }}
-                className="group bg-gradient-to-br from-sangeet-neutral-900 to-sangeet-neutral-800 rounded-2xl overflow-hidden shadow-2xl hover:shadow-sangeet-400/20 transition-all duration-500 border border-sangeet-neutral-700 hover:border-sangeet-400 flex flex-col h-full"
+                className="group bg-gradient-to-br from-sangeet-neutral-900 to-sangeet-neutral-800 rounded-2xl overflow-hidden shadow-2xl hover:shadow-sangeet-400/20 transition-all duration-500 border border-sangeet-neutral-700 hover:border-sangeet-400 flex flex-col h-[400px]"
               >
                 <div className="relative h-48 overflow-hidden">
                   <img
@@ -545,18 +648,22 @@ const HomePage = ({ menuItems, reviews, events }) => {
                   </div>
                 </div>
                 
-                <div className="p-6 flex flex-col flex-grow">
-                  <h3 className="text-xl font-bold text-sangeet-400 mb-2 group-hover:text-sangeet-300 transition-colors">
-                    {special.name}
-                  </h3>
-                  <p className="text-sangeet-neutral-400 mb-4 flex-grow">{special.description}</p>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 py-3 rounded-xl font-semibold hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-lg hover:shadow-sangeet-400/25 mt-auto"
-                  >
-                    Order Now - Save ${parseInt(special.originalPrice.slice(1)) - parseInt(special.price.slice(1))}
-                  </motion.button>
+                <div className="p-6 flex flex-col h-[240px]">
+                  <div className="flex-grow">
+                    <h3 className="text-xl font-bold text-sangeet-400 mb-2 group-hover:text-sangeet-300 transition-colors line-clamp-1">
+                      {special.name}
+                    </h3>
+                    <p className="text-sangeet-neutral-400 mb-4 line-clamp-2">{special.description}</p>
+                  </div>
+                  <div className="mt-auto">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 py-3 rounded-xl font-semibold hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-lg hover:shadow-sangeet-400/25 text-center"
+                    >
+                      Order Now - Save ${parseInt(special.originalPrice.slice(1)) - parseInt(special.price.slice(1))}
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -565,17 +672,25 @@ const HomePage = ({ menuItems, reviews, events }) => {
       </section>
 
       {/* Today's Specials Section - Mobile */}
-      <section className="md:hidden py-12 bg-gradient-to-br from-sangeet-neutral-950 via-sangeet-neutral-900 to-sangeet-neutral-950">
-        <div className="max-w-7xl mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-8"
-          >
-            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-sangeet-red-500/20 to-sangeet-400/20 backdrop-blur-md border border-sangeet-red-500/30 rounded-full px-4 py-2 mb-3">
-              <span className="text-xl">🔥</span>
-              <span className="text-sangeet-400 font-semibold text-sm">Today's Specials</span>
+      {showMobileSpecials && (
+        <motion.section 
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="md:hidden py-12 bg-gradient-to-br from-sangeet-neutral-950 via-sangeet-neutral-900 to-sangeet-neutral-950"
+        >
+          <div className="max-w-7xl mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-8"
+            >
+            <div className="flex justify-center mb-4">
+              <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-sangeet-red-500/20 to-sangeet-400/20 backdrop-blur-md border border-sangeet-red-500/30 rounded-full px-4 py-2">
+                <span className="text-xl">🔥</span>
+                <span className="text-sangeet-400 font-semibold text-sm">Today's Specials</span>
+              </div>
             </div>
             <h2 className="text-2xl font-bold text-sangeet-400 mb-2">Chef's Daily Picks</h2>
             <p className="text-sangeet-neutral-400 text-base">
@@ -618,7 +733,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
                 initial={{ opacity: 0, x: 50 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="flex-shrink-0 w-80 group bg-gradient-to-br from-sangeet-neutral-900 to-sangeet-neutral-800 rounded-2xl overflow-hidden shadow-2xl hover:shadow-sangeet-400/20 transition-all duration-500 border border-sangeet-neutral-700 hover:border-sangeet-400 flex flex-col h-full"
+                className="flex-shrink-0 w-80 group bg-gradient-to-br from-sangeet-neutral-900 to-sangeet-neutral-800 rounded-2xl overflow-hidden shadow-2xl hover:shadow-sangeet-400/20 transition-all duration-500 border border-sangeet-neutral-700 hover:border-sangeet-400 flex flex-col h-[320px]"
               >
                 <div className="relative h-40 overflow-hidden">
                   <img
@@ -651,29 +766,99 @@ const HomePage = ({ menuItems, reviews, events }) => {
                   </div>
                 </div>
                 
-                <div className="p-4 flex flex-col flex-grow">
-                  <h3 className="text-lg font-bold text-sangeet-400 mb-2 group-hover:text-sangeet-300 transition-colors">
-                    {special.name}
-                  </h3>
-                  <p className="text-sm text-sangeet-neutral-400 mb-3 flex-grow">{special.description}</p>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 py-2 rounded-xl font-semibold hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-lg hover:shadow-sangeet-400/25 touch-manipulation mt-auto"
-                  >
-                    Order Now - Save ${parseInt(special.originalPrice.slice(1)) - parseInt(special.price.slice(1))}
-                  </motion.button>
+                <div className="p-4 flex flex-col h-[200px]">
+                  <div className="flex-grow">
+                    <h3 className="text-lg font-bold text-sangeet-400 mb-2 group-hover:text-sangeet-300 transition-colors line-clamp-1">
+                      {special.name}
+                    </h3>
+                    <p className="text-sm text-sangeet-neutral-400 mb-4 line-clamp-2">{special.description}</p>
+                  </div>
+                  <div className="mt-auto">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 py-3 rounded-xl font-semibold hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-lg hover:shadow-sangeet-400/25 touch-manipulation text-center"
+                    >
+                      Order Now - Save ${parseInt(special.originalPrice.slice(1)) - parseInt(special.price.slice(1))}
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
             ))}
           </div>
         </div>
-      </section>
+        </motion.section>
+      )}
 
+      {/* Strategic Loading Section - Shows during delay to fill space */}
+      {!showMobileSpecials && (
+        <motion.section 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="md:hidden py-16 bg-gradient-to-br from-sangeet-neutral-950 via-sangeet-neutral-900 to-sangeet-neutral-950"
+        >
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ 
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="text-6xl mb-6"
+            >
+              🍽️
+            </motion.div>
+            
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="text-2xl font-bold text-sangeet-400 mb-4"
+            >
+              Discovering Today's Specials...
+            </motion.h2>
+            
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="text-sangeet-neutral-400 text-base mb-6"
+            >
+              Our chef is preparing today's authentic South Asian delights
+            </motion.p>
+            
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="flex justify-center space-x-2"
+            >
+              <div className="w-3 h-3 bg-sangeet-400 rounded-full"></div>
+              <div className="w-3 h-3 bg-sangeet-400 rounded-full"></div>
+              <div className="w-3 h-3 bg-sangeet-400 rounded-full"></div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 1.2 }}
+              className="mt-8"
+            >
+              <div className="inline-flex items-center space-x-2 bg-sangeet-neutral-800/50 backdrop-blur-md border border-sangeet-neutral-700 rounded-full px-4 py-2">
+                <span className="text-sangeet-400 text-sm">💡</span>
+                <span className="text-sangeet-neutral-300 text-sm">Scroll down to explore more</span>
+              </div>
+            </motion.div>
+          </div>
+        </motion.section>
+      )}
 
-
-      {/* Simplified Ambience Section */}
-      <section className="py-20 bg-gradient-to-br from-sangeet-neutral-950 via-sangeet-neutral-900 to-sangeet-neutral-950">
+      {/* Simplified Ambience Section - Conditionally Shown on Mobile */}
+      <section className={`${showMobileContent ? 'block' : 'hidden md:block'} py-20 bg-gradient-to-br from-sangeet-neutral-950 via-sangeet-neutral-900 to-sangeet-neutral-950`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -933,7 +1118,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
 
 
       {/* Unified Social Proof Section */}
-      <section className="py-20 bg-gradient-to-br from-sangeet-neutral-900 via-sangeet-neutral-800 to-sangeet-neutral-900">
+      <section className={`${showMobileContent ? 'block' : 'hidden md:block'} py-20 bg-gradient-to-br from-sangeet-neutral-900 via-sangeet-neutral-800 to-sangeet-neutral-900`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -984,7 +1169,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
           </div>
 
           {/* Mobile Layout */}
-          <div className="md:hidden flex overflow-x-auto gap-4 pb-4 scrollbar-hide mb-8">
+          <div className={`${showMobileContent ? 'md:hidden' : 'hidden'} flex overflow-x-auto gap-4 pb-4 scrollbar-hide mb-8`}>
             {reviews.slice(0, 3).map((review, index) => (
               <motion.div
                 key={review.id}
@@ -1042,7 +1227,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
 
 
       {/* Enhanced Events Section with Carousel */}
-      <section className="py-16 bg-sangeet-neutral-950">
+      <section className={`${showMobileContent ? 'block' : 'hidden md:block'} py-16 bg-sangeet-neutral-950`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -1165,7 +1350,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
           </div>
 
           {/* Mobile Events Carousel - Optimized */}
-          <div className="md:hidden">
+          <div className={`${showMobileContent ? 'md:hidden' : 'hidden'} block`}>
             <div className="flex overflow-x-auto gap-3 pb-4 scrollbar-hide">
               {UPCOMING_EVENTS.map((event, index) => (
                 <motion.div
@@ -1221,7 +1406,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
       </section>
 
       {/* Follow Our Journey Section */}
-      <section className="py-20 bg-gradient-to-br from-sangeet-neutral-900 via-sangeet-neutral-800 to-sangeet-neutral-900">
+      <section className={`${showMobileContent ? 'block' : 'hidden md:block'} py-20 bg-gradient-to-br from-sangeet-neutral-900 via-sangeet-neutral-800 to-sangeet-neutral-900`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -1309,7 +1494,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
           </div>
 
           {/* Journey Story - Mobile */}
-          <div className="md:hidden space-y-6">
+          <div className={`${showMobileContent ? 'md:hidden' : 'hidden'} space-y-6`}>
             {/* Main Story Image */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -1398,7 +1583,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
       </section>
 
       {/* Enhanced CTA Section - Final Call to Action */}
-      <section className="relative py-24 bg-gradient-to-br from-sangeet-neutral-900 via-sangeet-neutral-800 to-sangeet-neutral-900 overflow-hidden">
+      <section className={`${showMobileContent ? 'block' : 'hidden md:block'} relative py-24 bg-gradient-to-br from-sangeet-neutral-900 via-sangeet-neutral-800 to-sangeet-neutral-900 overflow-hidden`}>
         {/* Background Elements */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute inset-0 bg-gradient-to-br from-sangeet-400/5 to-sangeet-red-500/5"></div>
