@@ -139,7 +139,6 @@ const Footer = () => {
                   <span className="text-sangeet-400 text-lg">🕒</span>
                   <div>
                     <p>Mon-Sun, 6 PM - 11 PM</p>
-                    <p className="text-sm text-sangeet-neutral-500">Lunch Buffet: 12 PM - 3 PM</p>
                   </div>
                 </div>
               </div>
