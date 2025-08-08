@@ -83,12 +83,6 @@ const AboutPage = () => {
     // Culinary Journey
     {
       url: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&h=600&fit=crop",
-      title: "Chef's Special",
-      description: "Signature dishes crafted with passion and authentic South Asian techniques",
-      category: "culinary"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&h=600&fit=crop",
       title: "Traditional Cooking",
       description: "Behind-the-scenes look at our traditional cooking methods and techniques",
       category: "culinary"

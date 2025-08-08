@@ -1,19 +1,134 @@
 import axios from 'axios';
 
-// Create axios instance with base configuration
+// Constants
+const API_CONFIG = {
+  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:5001/api',
+  TIMEOUT: 10000,
+  RETRY_ATTEMPTS: 3,
+  RETRY_DELAY: 1000
+};
+
+// Error types for better error handling
+export const API_ERROR_TYPES = {
+  NETWORK: 'NETWORK_ERROR',
+  TIMEOUT: 'TIMEOUT_ERROR',
+  SERVER: 'SERVER_ERROR',
+  CLIENT: 'CLIENT_ERROR',
+  UNKNOWN: 'UNKNOWN_ERROR'
+};
+
+/**
+ * Create custom error class for API errors
+ */
+class ApiError extends Error {
+  constructor(message, type, status, originalError) {
+    super(message);
+    this.name = 'ApiError';
+    this.type = type;
+    this.status = status;
+    this.originalError = originalError;
+  }
+}
+
+/**
+ * Create axios instance with base configuration
+ */
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
-  timeout: 10000,
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+/**
+ * Get auth token from localStorage
+ * @returns {string|null} Auth token or null
+ */
+const getAuthToken = () => {
+  return localStorage.getItem('authToken') || localStorage.getItem('adminToken');
+};
+
+/**
+ * Add auth token to request headers
+ * @param {Object} config - Axios config
+ * @returns {Object} Updated config
+ */
+const addAuthToken = (config) => {
+  const token = getAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+};
+
+/**
+ * Handle API response errors
+ * @param {Error} error - Axios error
+ * @returns {Promise} Rejected promise with custom error
+ */
+const handleApiError = (error) => {
+  let errorType = API_ERROR_TYPES.UNKNOWN;
+  let status = null;
+  let message = 'An unexpected error occurred';
+
+  if (error.response) {
+    // Server responded with error status
+    status = error.response.status;
+    message = error.response.data?.message || `Server error: ${status}`;
+    
+    if (status >= 500) {
+      errorType = API_ERROR_TYPES.SERVER;
+    } else if (status >= 400) {
+      errorType = API_ERROR_TYPES.CLIENT;
+    }
+  } else if (error.request) {
+    // Network error
+    errorType = API_ERROR_TYPES.NETWORK;
+    message = 'Network error: Unable to connect to server';
+  } else if (error.code === 'ECONNABORTED') {
+    // Timeout error
+    errorType = API_ERROR_TYPES.TIMEOUT;
+    message = 'Request timeout: Server took too long to respond';
+  }
+
+  console.error('API Error:', {
+    type: errorType,
+    status,
+    message,
+    originalError: error
+  });
+
+  return Promise.reject(new ApiError(message, errorType, status, error));
+};
+
+/**
+ * Retry failed requests
+ * @param {Function} apiCall - API function to retry
+ * @param {number} attempts - Number of retry attempts
+ * @returns {Promise} API response
+ */
+const retryApiCall = async (apiCall, attempts = API_CONFIG.RETRY_ATTEMPTS) => {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      if (i === attempts - 1) throw error;
+      
+      // Only retry network and timeout errors
+      if (error.type === API_ERROR_TYPES.NETWORK || error.type === API_ERROR_TYPES.TIMEOUT) {
+        await new Promise(resolve => setTimeout(resolve, API_CONFIG.RETRY_DELAY * (i + 1)));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
+
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add loading state or auth token here if needed
-    return config;
+    return addAuthToken(config);
   },
   (error) => {
     return Promise.reject(error);
@@ -25,69 +140,531 @@ api.interceptors.response.use(
   (response) => {
     return response.data;
   },
-  (error) => {
-    console.error('API Error:', error);
-    return Promise.reject(error);
-  }
+  handleApiError
 );
+
+/**
+ * Generic API call wrapper with error handling and retry logic
+ * @param {Function} apiCall - API function to execute
+ * @param {string} errorContext - Context for error messages
+ * @param {boolean} enableRetry - Whether to enable retry logic
+ * @returns {Promise} API response
+ */
+const apiCallWrapper = async (apiCall, errorContext = 'API call', enableRetry = true) => {
+  try {
+    if (enableRetry) {
+      return await retryApiCall(apiCall);
+    }
+    return await apiCall();
+  } catch (error) {
+    console.error(`Error in ${errorContext}:`, error);
+    throw error;
+  }
+};
 
 // Menu API calls
 export const fetchMenuItems = async (filters = {}) => {
-  try {
+  return apiCallWrapper(async () => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) params.append(key, value);
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value);
+      }
     });
     
-    const response = await api.get(`/menu?${params.toString()}`);
-    return response;
-  } catch (error) {
-    console.error('Error fetching menu items:', error);
-    return [];
-  }
+    const queryString = params.toString();
+    const url = queryString ? `/menu/items?${queryString}` : '/menu/items';
+    return await api.get(url);
+  }, 'fetchMenuItems');
+};
+
+export const fetchMenuCategories = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/menu/categories');
+  }, 'fetchMenuCategories');
+};
+
+export const fetchPopularMenuItems = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/menu/popular');
+  }, 'fetchPopularMenuItems');
+};
+
+export const fetchMenuItemsByCategory = async (category) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/menu/category/${encodeURIComponent(category)}`);
+  }, 'fetchMenuItemsByCategory');
+};
+
+export const fetchMenuItemById = async (id) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/menu/items/${encodeURIComponent(id)}`);
+  }, 'fetchMenuItemById');
 };
 
 // Reviews API calls
 export const fetchReviews = async () => {
-  try {
-    const response = await api.get('/reviews');
-    return response;
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
-    return [];
-  }
+  return apiCallWrapper(async () => {
+    return await api.get('/reviews');
+  }, 'fetchReviews');
 };
 
 export const submitReview = async (reviewData) => {
-  try {
-    const response = await api.post('/reviews', reviewData);
-    return response;
-  } catch (error) {
-    console.error('Error submitting review:', error);
-    throw error;
-  }
+  return apiCallWrapper(async () => {
+    return await api.post('/reviews', reviewData);
+  }, 'submitReview', false);
+};
+
+export const fetchReviewById = async (id) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/reviews/${encodeURIComponent(id)}`);
+  }, 'fetchReviewById');
 };
 
 // Reservations API calls
 export const createReservation = async (reservationData) => {
-  try {
-    const response = await api.post('/reservations', reservationData);
-    return response;
-  } catch (error) {
-    console.error('Error creating reservation:', error);
-    throw error;
-  }
+  return apiCallWrapper(async () => {
+    return await api.post('/reservations', reservationData);
+  }, 'createReservation', false);
+};
+
+export const getAvailableTables = async (date, time, guests) => {
+  return apiCallWrapper(async () => {
+    const params = new URLSearchParams({
+      date: date,
+      time: time,
+      guests: guests.toString()
+    });
+    return await api.get(`/reservations/available-tables?${params.toString()}`);
+  }, 'getAvailableTables');
+};
+
+export const getAvailableTimeSlots = async (date, guests = 4) => {
+  return apiCallWrapper(async () => {
+    const params = new URLSearchParams({
+      date: date,
+      guests: guests.toString()
+    });
+    return await api.get(`/reservations/available-times?${params.toString()}`);
+  }, 'getAvailableTimeSlots');
+};
+
+export const fetchAllReservations = async (filters = {}) => {
+  return apiCallWrapper(async () => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    const queryString = params.toString();
+    const url = queryString ? `/reservations?${queryString}` : '/reservations';
+    return await api.get(url);
+  }, 'fetchAllReservations');
+};
+
+export const fetchReservationById = async (id) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/reservations/${encodeURIComponent(id)}`);
+  }, 'fetchReservationById');
+};
+
+export const updateReservation = async (id, reservationData) => {
+  return apiCallWrapper(async () => {
+    return await api.put(`/reservations/${encodeURIComponent(id)}`, reservationData);
+  }, 'updateReservation', false);
+};
+
+export const updateReservationStatus = async (id, status) => {
+  return apiCallWrapper(async () => {
+    return await api.patch(`/reservations/${encodeURIComponent(id)}/status`, { status });
+  }, 'updateReservationStatus', false);
+};
+
+export const deleteReservation = async (id) => {
+  return apiCallWrapper(async () => {
+    return await api.delete(`/reservations/${encodeURIComponent(id)}`);
+  }, 'deleteReservation', false);
+};
+
+export const checkTableAvailability = async (tableId, date, time, guests) => {
+  return apiCallWrapper(async () => {
+    const params = new URLSearchParams({
+      tableId: tableId.toString(),
+      date: date,
+      time: time,
+      guests: guests.toString()
+    });
+    return await api.get(`/reservations/check-availability?${params.toString()}`);
+  }, 'checkTableAvailability');
+};
+
+export const fetchReservationStats = async (date = null) => {
+  return apiCallWrapper(async () => {
+    const url = date ? `/reservations/stats?date=${encodeURIComponent(date)}` : '/reservations/stats';
+    return await api.get(url);
+  }, 'fetchReservationStats');
 };
 
 // Events API calls
 export const fetchEvents = async () => {
-  try {
-    const response = await api.get('/events');
-    return response;
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    return [];
-  }
+  return apiCallWrapper(async () => {
+    return await api.get('/events');
+  }, 'fetchEvents');
+};
+
+export const fetchFeaturedEvents = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/events/featured');
+  }, 'fetchFeaturedEvents');
+};
+
+export const fetchUpcomingEvents = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/events/upcoming');
+  }, 'fetchUpcomingEvents');
+};
+
+export const fetchEventById = async (id) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/events/${encodeURIComponent(id)}`);
+  }, 'fetchEventById');
+};
+
+// Orders API calls
+export const deleteOrder = async (orderId) => {
+  return apiCallWrapper(async () => {
+    return await api.delete(`/orders/${encodeURIComponent(orderId)}`);
+  }, 'deleteOrder', false);
+};
+
+export const bulkUpdateOrderStatus = async (orderIds, status) => {
+  return apiCallWrapper(async () => {
+    return await api.patch('/orders/bulk-status', { orderIds, status });
+  }, 'bulkUpdateOrderStatus', false);
+};
+
+export const searchOrders = async (searchParams = {}) => {
+  return apiCallWrapper(async () => {
+    const params = new URLSearchParams();
+    Object.entries(searchParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    const queryString = params.toString();
+    const url = queryString ? `/orders/search?${queryString}` : '/orders/search';
+    return await api.get(url);
+  }, 'searchOrders');
+};
+
+export const fetchTables = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/tables');
+  }, 'fetchTables');
+};
+
+export const getTableByQRCode = async (qrCode) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/tables/qr/${encodeURIComponent(qrCode)}`);
+  }, 'getTableByQRCode');
+};
+
+export const createOrder = async (orderData) => {
+  return apiCallWrapper(async () => {
+    return await api.post('/orders', orderData);
+  }, 'createOrder', false);
+};
+
+export const fetchOrderById = async (orderId) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/orders/${encodeURIComponent(orderId)}`);
+  }, 'fetchOrderById');
+};
+
+export const fetchOrdersByTable = async (tableId) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/orders/table/${encodeURIComponent(tableId)}`);
+  }, 'fetchOrdersByTable');
+};
+
+export const updateOrderStatus = async (orderId, status) => {
+  return apiCallWrapper(async () => {
+    return await api.patch(`/orders/${encodeURIComponent(orderId)}/status`, { status });
+  }, 'updateOrderStatus', false);
+};
+
+export const fetchAllOrders = async (queryParams = '') => {
+  return apiCallWrapper(async () => {
+    const url = queryParams ? `/orders?${queryParams}` : '/orders';
+    return await api.get(url);
+  }, 'fetchAllOrders');
+};
+
+export const fetchOrderStats = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/orders/stats');
+  }, 'fetchOrderStats');
+};
+
+// Health check
+export const checkApiHealth = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/health');
+  }, 'checkApiHealth');
+};
+
+// Authentication API calls
+export const loginUser = async (credentials) => {
+  return apiCallWrapper(async () => {
+    return await api.post('/auth/login', credentials);
+  }, 'loginUser', false);
+};
+
+export const getProfile = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/auth/profile');
+  }, 'getProfile');
+};
+
+export const changePassword = async (passwordData) => {
+  return apiCallWrapper(async () => {
+    return await api.post('/auth/change-password', passwordData);
+  }, 'changePassword', false);
+};
+
+// User management API calls
+export const getAllUsers = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/users');
+  }, 'getAllUsers');
+};
+
+export const createUser = async (userData) => {
+  return apiCallWrapper(async () => {
+    return await api.post('/users', userData);
+  }, 'createUser', false);
+};
+
+export const updateUser = async (id, userData) => {
+  return apiCallWrapper(async () => {
+    return await api.put(`/users/${encodeURIComponent(id)}`, userData);
+  }, 'updateUser', false);
+};
+
+export const deleteUser = async (id) => {
+  return apiCallWrapper(async () => {
+    return await api.delete(`/users/${encodeURIComponent(id)}`);
+  }, 'deleteUser', false);
+};
+
+export const toggleUserStatus = async (id) => {
+  return apiCallWrapper(async () => {
+    return await api.patch(`/users/${encodeURIComponent(id)}/toggle-status`);
+  }, 'toggleUserStatus', false);
+};
+
+export const getUserStats = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/users/stats');
+  }, 'getUserStats');
+};
+
+// Menu management API calls
+export const createMenuItem = async (menuData) => {
+  return apiCallWrapper(async () => {
+    return await api.post('/menu/items', menuData);
+  }, 'createMenuItem', false);
+};
+
+export const updateMenuItem = async (id, menuData) => {
+  return apiCallWrapper(async () => {
+    return await api.put(`/menu/items/${encodeURIComponent(id)}`, menuData);
+  }, 'updateMenuItem', false);
+};
+
+export const deleteMenuItem = async (id) => {
+  return apiCallWrapper(async () => {
+    return await api.delete(`/menu/items/${encodeURIComponent(id)}`);
+  }, 'deleteMenuItem', false);
+};
+
+export const createCategory = async (categoryData) => {
+  return apiCallWrapper(async () => {
+    return await api.post('/menu/categories', categoryData);
+  }, 'createCategory', false);
+};
+
+export const updateCategory = async (id, categoryData) => {
+  return apiCallWrapper(async () => {
+    return await api.put(`/menu/categories/${encodeURIComponent(id)}`, categoryData);
+  }, 'updateCategory', false);
+};
+
+export const deleteCategory = async (id) => {
+  return apiCallWrapper(async () => {
+    return await api.delete(`/menu/categories/${encodeURIComponent(id)}`);
+  }, 'deleteCategory', false);
+};
+
+export const getMenuStats = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/menu/stats');
+  }, 'getMenuStats');
+};
+
+// QR Code management API calls
+export const getAllQRCodes = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/qr-codes');
+  }, 'getAllQRCodes');
+};
+
+export const generateTableQRCode = async (qrData) => {
+  return apiCallWrapper(async () => {
+    return await api.post('/qr-codes/table', qrData);
+  }, 'generateTableQRCode', false);
+};
+
+export const generateCustomQRCode = async (qrData) => {
+  return apiCallWrapper(async () => {
+    return await api.post('/qr-codes/custom', qrData);
+  }, 'generateCustomQRCode', false);
+};
+
+export const bulkGenerateTableQRCodes = async (qrData) => {
+  return apiCallWrapper(async () => {
+    return await api.post('/qr-codes/bulk-table', qrData);
+  }, 'bulkGenerateTableQRCodes', false);
+};
+
+export const getQRCodeAnalytics = async (type, qrCodeId) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/qr-codes/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}/analytics`);
+  }, 'getQRCodeAnalytics');
+};
+
+export const updateQRCodeDesign = async (type, qrCodeId, design) => {
+  return apiCallWrapper(async () => {
+    return await api.put(`/qr-codes/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}/design`, design);
+  }, 'updateQRCodeDesign', false);
+};
+
+export const deleteQRCode = async (type, qrCodeId) => {
+  return apiCallWrapper(async () => {
+    return await api.delete(`/qr-codes/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}`);
+  }, 'deleteQRCode', false);
+};
+
+export const downloadPrintableQRCode = async (type, qrCodeId, format = 'png') => {
+  return apiCallWrapper(async () => {
+    const params = new URLSearchParams({ format });
+    return await api.get(`/qr-codes/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}/download?${params.toString()}`, {
+      responseType: 'blob'
+    });
+  }, 'downloadPrintableQRCode');
+};
+
+// Website management API calls
+export const getRestaurantSettings = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/website/settings');
+  }, 'getRestaurantSettings');
+};
+
+export const updateRestaurantSettings = async (settings) => {
+  return apiCallWrapper(async () => {
+    return await api.put('/website/settings', settings);
+  }, 'updateRestaurantSettings', false);
+};
+
+export const getWebsiteContent = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/website/content');
+  }, 'getWebsiteContent');
+};
+
+export const updateWebsiteContent = async (content) => {
+  return apiCallWrapper(async () => {
+    return await api.put('/website/content', content);
+  }, 'updateWebsiteContent', false);
+};
+
+export const getWebsiteMedia = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/website/media');
+  }, 'getWebsiteMedia');
+};
+
+export const uploadWebsiteMedia = async (formData) => {
+  return apiCallWrapper(async () => {
+    return await api.post('/website/media', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }, 'uploadWebsiteMedia', false);
+};
+
+export const deleteWebsiteMedia = async (id) => {
+  return apiCallWrapper(async () => {
+    return await api.delete(`/website/media/${encodeURIComponent(id)}`);
+  }, 'deleteWebsiteMedia', false);
+};
+
+export const getWebsiteStats = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/website/stats');
+  }, 'getWebsiteStats');
+};
+
+// Analytics API calls
+export const getBusinessAnalytics = async (timeframe = '30') => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/analytics/business?timeframe=${encodeURIComponent(timeframe)}`);
+  }, 'getBusinessAnalytics');
+};
+
+export const getReservationTrends = async (period = 'month') => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/analytics/reservations?period=${encodeURIComponent(period)}`);
+  }, 'getReservationTrends');
+};
+
+export const getMenuAnalytics = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/analytics/menu');
+  }, 'getMenuAnalytics');
+};
+
+export const getCustomerInsights = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/analytics/customers');
+  }, 'getCustomerInsights');
+};
+
+export const getPerformanceMetrics = async (startDate, endDate) => {
+  return apiCallWrapper(async () => {
+    const params = new URLSearchParams({
+      startDate: startDate,
+      endDate: endDate
+    });
+    return await api.get(`/analytics/performance?${params.toString()}`);
+  }, 'getPerformanceMetrics');
+};
+
+export const exportAnalyticsData = async (type = 'summary', format = 'json') => {
+  return apiCallWrapper(async () => {
+    const params = new URLSearchParams({
+      type: type,
+      format: format
+    });
+    return await api.get(`/analytics/export?${params.toString()}`, {
+      responseType: 'blob'
+    });
+  }, 'exportAnalyticsData');
 };
 
 export default api; 

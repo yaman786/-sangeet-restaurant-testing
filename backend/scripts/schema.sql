@@ -56,6 +56,44 @@ CREATE TABLE IF NOT EXISTS events (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Categories Table for Menu Management
+CREATE TABLE IF NOT EXISTS categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    display_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Update menu_items table to use category_id instead of category string
+ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id);
+ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+-- Insert default categories
+INSERT INTO categories (name, description, display_order) VALUES
+('Appetizers', 'Start your meal with our delicious appetizers', 1),
+('Main Course', 'Our signature main dishes', 2),
+('Biryani', 'Authentic Indian biryani varieties', 3),
+('Breads', 'Freshly baked Indian breads', 4),
+('Rice & Noodles', 'Aromatic rice and noodle dishes', 5),
+('Desserts', 'Sweet endings to your meal', 6),
+('Beverages', 'Refreshing drinks and beverages', 7),
+('Sides', 'Perfect accompaniments', 8)
+ON CONFLICT (name) DO NOTHING;
+
+-- Update existing menu items to use category_id
+UPDATE menu_items SET category_id = (SELECT id FROM categories WHERE name = 'Appetizers') WHERE category = 'Appetizers';
+UPDATE menu_items SET category_id = (SELECT id FROM categories WHERE name = 'Main Course') WHERE category = 'Main Course';
+UPDATE menu_items SET category_id = (SELECT id FROM categories WHERE name = 'Biryani') WHERE category = 'Biryani';
+UPDATE menu_items SET category_id = (SELECT id FROM categories WHERE name = 'Breads') WHERE category = 'Breads';
+UPDATE menu_items SET category_id = (SELECT id FROM categories WHERE name = 'Rice & Noodles') WHERE category = 'Rice & Noodles';
+UPDATE menu_items SET category_id = (SELECT id FROM categories WHERE name = 'Desserts') WHERE category = 'Desserts';
+UPDATE menu_items SET category_id = (SELECT id FROM categories WHERE name = 'Beverages') WHERE category = 'Beverages';
+UPDATE menu_items SET category_id = (SELECT id FROM categories WHERE name = 'Sides') WHERE category = 'Sides';
+
 -- Insert sample menu items
 INSERT INTO menu_items (name, description, price, category, image_url, is_vegetarian, is_spicy, is_popular) VALUES
 -- Starters
@@ -80,9 +118,9 @@ INSERT INTO menu_items (name, description, price, category, image_url, is_vegeta
 ('Gulab Jamun', 'Sweet milk dumplings in rose syrup', 8.00, 'Desserts', 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop', true, false, true),
 ('Kheer', 'Rice pudding with cardamom and nuts', 7.50, 'Desserts', 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop', true, false, false),
 
--- Drinks
-('Mango Lassi', 'Sweet yogurt drink with fresh mango', 6.00, 'Drinks', 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop', true, false, true),
-('Masala Chai', 'Spiced Indian tea with milk', 4.50, 'Drinks', 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop', true, false, true);
+-- Beverages
+('Masala Chai', 'Spiced Indian tea with milk', 4.00, 'Beverages', 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop', true, false, true),
+('Lassi', 'Sweet yogurt drink', 5.00, 'Beverages', 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop', true, false, false);
 
 -- Insert sample reviews
 INSERT INTO customer_reviews (customer_name, review_text, rating, image_url, is_verified) VALUES
@@ -103,4 +141,7 @@ CREATE INDEX idx_menu_items_category ON menu_items(category);
 CREATE INDEX idx_menu_items_popular ON menu_items(is_popular);
 CREATE INDEX idx_reservations_date ON reservations(date);
 CREATE INDEX idx_events_date ON events(date);
-CREATE INDEX idx_events_featured ON events(is_featured); 
+CREATE INDEX idx_events_featured ON events(is_featured);
+CREATE INDEX IF NOT EXISTS idx_menu_items_category_id ON menu_items(category_id);
+CREATE INDEX IF NOT EXISTS idx_menu_items_is_active ON menu_items(is_active);
+CREATE INDEX IF NOT EXISTS idx_categories_is_active ON categories(is_active); 

@@ -3,65 +3,189 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
+const http = require('http');
+const path = require('path');
 require('dotenv').config();
 
-const app = express();
-const PORT = process.env.PORT || 5001;
+// Import middleware and utilities
+const { errorHandler } = require('./middleware/errorHandler');
+const { notFoundHandler } = require('./middleware/notFoundHandler');
+const { requestLogger } = require('./middleware/requestLogger');
+const { validateEnvironment } = require('./utils/environmentValidator');
 
-// Middleware
-app.use(helmet());
-app.use(compression());
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
-}));
+// Import routes
+const authRoutes = require('./routes/auth');
+const menuRoutes = require('./routes/menu');
+const reservationRoutes = require('./routes/reservations');
+const reviewRoutes = require('./routes/reviews');
+const eventRoutes = require('./routes/events');
+const orderRoutes = require('./routes/orders');
+const qrRoutes = require('./routes/qr');
+const websiteRoutes = require('./routes/website');
+const analyticsRoutes = require('./routes/analytics');
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use('/api/', limiter);
+// Import socket initialization
+const { initializeSocket } = require('./socket');
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// Configuration constants
+const CONFIG = {
+  PORT: process.env.PORT || 5001,
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3000',
+  RATE_LIMIT_WINDOW: 15 * 60 * 1000, // 15 minutes
+  RATE_LIMIT_MAX: 100, // requests per window
+  BODY_LIMIT: '10mb'
+};
 
-// Database connection - temporarily disabled for testing
-// const pool = require('./config/database');
+/**
+ * Create and configure Express application
+ * @returns {express.Application} Configured Express app
+ */
+function createApp() {
+  const app = express();
+  const server = http.createServer(app);
 
-// Routes
-app.use('/api/menu', require('./routes/menu'));
-app.use('/api/reservations', require('./routes/reservations'));
-app.use('/api/reviews', require('./routes/reviews'));
-app.use('/api/events', require('./routes/events'));
+  // Validate environment variables
+  validateEnvironment();
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    service: 'Sangeet Restaurant API'
+  // Security middleware
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", CONFIG.CLIENT_URL]
+      }
+    },
+    crossOriginEmbedderPolicy: false
+  }));
+
+  // Compression middleware
+  app.use(compression());
+
+  // CORS configuration
+  app.use(cors({
+    origin: CONFIG.CLIENT_URL,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  }));
+
+  // Rate limiting
+  const limiter = rateLimit({
+    windowMs: CONFIG.RATE_LIMIT_WINDOW,
+    max: CONFIG.RATE_LIMIT_MAX,
+    message: {
+      error: 'Too many requests from this IP, please try again later.',
+      retryAfter: Math.ceil(CONFIG.RATE_LIMIT_WINDOW / 1000)
+    },
+    standardHeaders: true,
+    legacyHeaders: false
   });
-});
+  app.use('/api/', limiter);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  // Body parsing middleware
+  app.use(express.json({ 
+    limit: CONFIG.BODY_LIMIT,
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    }
+  }));
+  app.use(express.urlencoded({ 
+    extended: true, 
+    limit: CONFIG.BODY_LIMIT 
+  }));
+
+  // Request logging middleware
+  if (CONFIG.NODE_ENV === 'development') {
+    app.use(requestLogger);
+  }
+
+  // Health check endpoint
+  app.get('/api/health', (req, res) => {
+    res.status(200).json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      environment: CONFIG.NODE_ENV,
+      service: 'Sangeet Restaurant API',
+      version: process.env.npm_package_version || '1.0.0',
+      uptime: process.uptime()
+    });
   });
-});
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+  // API routes
+  app.use('/api/auth', authRoutes);
+  app.use('/api/menu', menuRoutes);
+  app.use('/api/reservations', reservationRoutes);
+  app.use('/api/reviews', reviewRoutes);
+  app.use('/api/events', eventRoutes);
+  app.use('/api/orders', orderRoutes);
+  app.use('/api/tables', require('./routes/tables'));
+  app.use('/api/qr-codes', qrRoutes);
+  app.use('/api/website', websiteRoutes);
+  app.use('/api/analytics', analyticsRoutes);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Sangeet Restaurant API running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-});
+  // Error handling middleware
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
-module.exports = app; 
+  return { app, server };
+}
+
+/**
+ * Start the server
+ * @param {express.Application} app - Express app
+ * @param {http.Server} server - HTTP server
+ */
+function startServer(app, server) {
+  const PORT = CONFIG.PORT;
+
+  server.listen(PORT, () => {
+    console.log(`🚀 Sangeet Restaurant API running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🔌 WebSocket server initialized`);
+    console.log(`🌍 Environment: ${CONFIG.NODE_ENV}`);
+    console.log(`⏰ Started at: ${new Date().toISOString()}`);
+  });
+
+  // Graceful shutdown handling
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+      console.log('Process terminated');
+      process.exit(0);
+    });
+  });
+
+  process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    server.close(() => {
+      console.log('Process terminated');
+      process.exit(0);
+    });
+  });
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+  });
+}
+
+// Initialize application
+const { app, server } = createApp();
+
+// Initialize Socket.IO
+const io = initializeSocket(server);
+
+// Start server
+startServer(app, server);
+
+module.exports = { app, server }; 

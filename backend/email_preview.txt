@@ -1,0 +1,65 @@
+EMAIL TEMPLATE PREVIEW WITH MOCK DATA
+=====================================
+
+1. THANK YOU EMAIL (When customer submits reservation)
+=====================================================
+
+Subject: Thank You for Your Reservation Request - Sangeet Restaurant
+
+Content:
+- Beautiful header with Sangeet Restaurant logo
+- Thank you message with 🙏 emoji
+- Reservation details in grid layout:
+  * Guest Name: John Smith
+  * Number of Guests: 4 people
+  * Date: Saturday, December 25, 2024
+  * Time: 7:00 PM
+  * Status: Awaiting Confirmation
+- Special Requests section (if any): "Window seat preferred, and please note one guest has a nut allergy"
+- Next Steps section explaining they'll get confirmation within 2 hours
+- Contact information footer
+
+2. CONFIRMATION EMAIL (When admin confirms reservation)
+======================================================
+
+Subject: 🎉 Your Reservation is Confirmed! - Sangeet Restaurant
+
+Content:
+- Celebration header with 🎉 emoji
+- Confirmed reservation details in grid:
+  * Guest Name: John Smith
+  * Number of Guests: 4 people
+  * Date: Saturday, December 25, 2024
+  * Time: 7:00 PM
+  * Table Number: Table 8 (highlighted in gold)
+- Special Requests section
+- Important Information:
+  * Arrival Time: 5-10 minutes before
+  * Dress Code: Smart casual
+  * Cancellation Policy: Free up to 2 hours before
+- What to Expect section:
+  * Exquisite Cuisine
+  * Elegant Ambiance
+  * Attentive Service
+  * Fine Beverages
+- Personal message from the team
+- Contact information for changes
+
+3. CANCELLATION EMAIL (When admin cancels reservation)
+=====================================================
+
+Subject: Reservation Cancelled - Sangeet Restaurant
+
+Content:
+- Cancellation notice with ❌ emoji
+- Cancelled reservation details
+- Encouraging message about future bookings
+- Contact information for rebooking
+
+All emails feature:
+- Professional Sangeet branding
+- Responsive design
+- Beautiful gradients
+- Clear, strategic messaging
+- Contact information
+- Mobile-friendly layout
