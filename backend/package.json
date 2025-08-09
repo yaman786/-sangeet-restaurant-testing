@@ -7,7 +7,9 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest",
-    "migrate": "node scripts/migrate.js"
+    "migrate": "node scripts/migrate.js",
+    "migrate:render": "node scripts/migrate-render.js",
+    "build": "echo 'No build step needed for Node.js'"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
