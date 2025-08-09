@@ -70,6 +70,7 @@ function createApp() {
     CONFIG.CLIENT_URL,
     'http://localhost:3000',
     'https://localhost:3000',
+    'https://sangeet-restaurant-testing-frontend.vercel.app',
     /https:\/\/.*\.onrender\.com$/,
     /https:\/\/.*\.vercel\.app$/,
     /https:\/\/.*\.netlify\.app$/
