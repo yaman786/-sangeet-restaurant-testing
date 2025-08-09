@@ -65,9 +65,36 @@ function createApp() {
   // Compression middleware
   app.use(compression());
 
-  // CORS configuration
+  // CORS configuration - Allow multiple origins for production
+  const allowedOrigins = [
+    CONFIG.CLIENT_URL,
+    'http://localhost:3000',
+    'https://localhost:3000',
+    /https:\/\/.*\.onrender\.com$/,
+    /https:\/\/.*\.vercel\.app$/,
+    /https:\/\/.*\.netlify\.app$/
+  ];
+
   app.use(cors({
-    origin: CONFIG.CLIENT_URL,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      
+      const isAllowed = allowedOrigins.some(allowedOrigin => {
+        if (typeof allowedOrigin === 'string') {
+          return allowedOrigin === origin;
+        } else if (allowedOrigin instanceof RegExp) {
+          return allowedOrigin.test(origin);
+        }
+        return false;
+      });
+      
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
