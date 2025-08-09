@@ -24,7 +24,8 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "FORCE_REBUILD": "v3.0"
   },
   "functions": {
     "api/index.js": {
