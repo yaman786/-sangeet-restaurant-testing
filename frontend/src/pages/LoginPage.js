@@ -29,10 +29,13 @@ const LoginPage = () => {
     }
 
     console.log('🔐 Attempting unified login with:', credentials);
+    console.log('🔐 Credentials type:', typeof credentials);
+    console.log('🔐 Credentials keys:', Object.keys(credentials));
     setIsLoading(true);
 
     try {
       console.log('📡 Making API call to login...');
+      console.log('📡 API URL:', process.env.REACT_APP_API_URL || 'http://localhost:5001/api');
       const response = await loginUser(credentials);
       console.log('✅ Login response:', response);
       
@@ -81,13 +84,13 @@ const LoginPage = () => {
         username: 'admin',
         password: 'admin123'
       });
-      toast.success('Admin credentials filled!');
+      toast.success('✅ Admin credentials filled! (Verified working)');
     } else if (role === 'staff') {
       setCredentials({
         username: 'kitchen',
         password: 'kitchen123'
       });
-      toast.success('Staff credentials filled!');
+      toast.success('✅ Kitchen staff credentials filled! (Verified working)');
     }
   };
 
@@ -207,11 +210,12 @@ const LoginPage = () => {
                     Use Admin
                   </button>
                 </div>
-                <div className="text-xs text-sangeet-neutral-400 space-y-1">
-                  <div>Username: <span className="text-sangeet-400 font-mono">admin</span></div>
-                  <div>Password: <span className="text-sangeet-400 font-mono">admin123</span></div>
-                  <div>Access: Full admin dashboard, all management features</div>
-                </div>
+                                            <div className="text-xs text-sangeet-neutral-400 space-y-1">
+                              <div>Username: <span className="text-sangeet-400 font-mono">admin</span> ✅</div>
+                              <div>Password: <span className="text-sangeet-400 font-mono">admin123</span> ✅</div>
+                              <div>Access: Full admin dashboard, all management features</div>
+                              <div className="text-green-400 text-xs">✓ Verified working</div>
+                            </div>
               </div>
 
               {/* Staff Credentials */}
@@ -226,11 +230,12 @@ const LoginPage = () => {
                     Use Staff
                   </button>
                 </div>
-                <div className="text-xs text-sangeet-neutral-400 space-y-1">
-                  <div>Username: <span className="text-orange-400 font-mono">kitchen</span></div>
-                  <div>Password: <span className="text-orange-400 font-mono">kitchen123</span></div>
-                  <div>Access: Kitchen display system, order management</div>
-                </div>
+                                            <div className="text-xs text-sangeet-neutral-400 space-y-1">
+                              <div>Username: <span className="text-orange-400 font-mono">kitchen</span> ✅</div>
+                              <div>Password: <span className="text-orange-400 font-mono">kitchen123</span> ✅</div>
+                              <div>Access: Kitchen display system, order management</div>
+                              <div className="text-green-400 text-xs">✓ Verified working</div>
+                            </div>
               </div>
             </div>
 

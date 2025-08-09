@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const { validateTableData } = require('../middleware/validation');
 const pool = require('../config/database');
 
@@ -10,9 +10,10 @@ const pool = require('../config/database');
  */
 router.get('/', async (req, res, next) => {
   try {
-    const [rows] = await pool.execute(
+    const result = await pool.query(
       'SELECT * FROM tables WHERE is_active = true ORDER BY table_number'
     );
+    const rows = result.rows;
     
     res.json(rows);
   } catch (error) {
@@ -28,10 +29,11 @@ router.get('/qr/:qrCode', async (req, res, next) => {
   try {
     const { qrCode } = req.params;
     
-    const [rows] = await pool.execute(
-      'SELECT * FROM tables WHERE qr_code = ? AND is_active = true',
+    const result = await pool.query(
+      'SELECT * FROM tables WHERE qr_code = $1 AND is_active = true',
       [qrCode]
     );
+    const rows = result.rows;
     
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Table not found' });
@@ -47,21 +49,18 @@ router.get('/qr/:qrCode', async (req, res, next) => {
  * POST /api/tables
  * Create a new table (Admin only)
  */
-router.post('/', authenticateToken, requireRole('admin'), validateTableData, async (req, res, next) => {
+router.post('/', authenticateToken, requireAdmin, validateTableData, async (req, res, next) => {
   try {
     const { table_number, capacity, qr_code, location } = req.body;
     
-    const [result] = await pool.execute(
-      'INSERT INTO tables (table_number, capacity, qr_code, location) VALUES (?, ?, ?, ?)',
+    const result = await pool.query(
+      'INSERT INTO tables (table_number, capacity, qr_code, location) VALUES ($1, $2, $3, $4) RETURNING *',
       [table_number, capacity, qr_code, location]
     );
     
-    const [newTable] = await pool.execute(
-      'SELECT * FROM tables WHERE id = ?',
-      [result.insertId]
-    );
+    const newTable = result.rows[0];
     
-    res.status(201).json(newTable[0]);
+    res.status(201).json(newTable);
   } catch (error) {
     next(error);
   }
@@ -71,26 +70,23 @@ router.post('/', authenticateToken, requireRole('admin'), validateTableData, asy
  * PUT /api/tables/:id
  * Update a table (Admin only)
  */
-router.put('/:id', authenticateToken, requireRole('admin'), validateTableData, async (req, res, next) => {
+router.put('/:id', authenticateToken, requireAdmin, validateTableData, async (req, res, next) => {
   try {
     const { id } = req.params;
     const { table_number, capacity, qr_code, location } = req.body;
     
-    const [result] = await pool.execute(
-      'UPDATE tables SET table_number = ?, capacity = ?, qr_code = ?, location = ? WHERE id = ?',
+    const result = await pool.query(
+      'UPDATE tables SET table_number = $1, capacity = $2, qr_code = $3, location = $4 WHERE id = $5 RETURNING *',
       [table_number, capacity, qr_code, location, id]
     );
     
-    if (result.affectedRows === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Table not found' });
     }
     
-    const [updatedTable] = await pool.execute(
-      'SELECT * FROM tables WHERE id = ?',
-      [id]
-    );
+    const updatedTable = result.rows[0];
     
-    res.json(updatedTable[0]);
+    res.json(updatedTable);
   } catch (error) {
     next(error);
   }
@@ -100,16 +96,16 @@ router.put('/:id', authenticateToken, requireRole('admin'), validateTableData, a
  * DELETE /api/tables/:id
  * Soft delete a table (Admin only)
  */
-router.delete('/:id', authenticateToken, requireRole('admin'), async (req, res, next) => {
+router.delete('/:id', authenticateToken, requireAdmin, async (req, res, next) => {
   try {
     const { id } = req.params;
     
-    const [result] = await pool.execute(
-      'UPDATE tables SET is_active = false WHERE id = ?',
+    const result = await pool.query(
+      'UPDATE tables SET is_active = false WHERE id = $1 RETURNING *',
       [id]
     );
     
-    if (result.affectedRows === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Table not found' });
     }
     
@@ -123,24 +119,24 @@ router.delete('/:id', authenticateToken, requireRole('admin'), async (req, res, 
  * GET /api/tables/stats
  * Get table statistics (Admin only)
  */
-router.get('/stats', authenticateToken, requireRole('admin'), async (req, res, next) => {
+router.get('/stats', authenticateToken, requireAdmin, async (req, res, next) => {
   try {
-    const [totalTables] = await pool.execute(
+    const totalTablesResult = await pool.query(
       'SELECT COUNT(*) as total FROM tables WHERE is_active = true'
     );
     
-    const [capacityStats] = await pool.execute(
+    const capacityStatsResult = await pool.query(
       'SELECT MIN(capacity) as min_capacity, MAX(capacity) as max_capacity, AVG(capacity) as avg_capacity FROM tables WHERE is_active = true'
     );
     
-    const [locationStats] = await pool.execute(
+    const locationStatsResult = await pool.query(
       'SELECT location, COUNT(*) as count FROM tables WHERE is_active = true GROUP BY location'
     );
     
     res.json({
-      total_tables: totalTables[0].total,
-      capacity_stats: capacityStats[0],
-      location_stats: locationStats
+      total_tables: totalTablesResult.rows[0].total,
+      capacity_stats: capacityStatsResult.rows[0],
+      location_stats: locationStatsResult.rows
     });
   } catch (error) {
     next(error);

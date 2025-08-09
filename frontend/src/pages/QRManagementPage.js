@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   QrCode, 
@@ -10,7 +10,12 @@ import {
   Globe,
   RefreshCw,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Search,
+  Filter,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AdminHeader from '../components/AdminHeader';
@@ -28,6 +33,17 @@ const QRManagementPage = () => {
   const [qrCodes, setQrCodes] = useState({ tableQRCodes: [], customQRCodes: [] });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('table');
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    // Reset filters and search when switching tabs
+    setSearchTerm('');
+    setFilterStatus('all');
+    setSortConfig({
+      key: tab === 'table' ? 'table_number' : 'created_at',
+      direction: 'asc'
+    });
+  };
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
@@ -61,9 +77,96 @@ const QRManagementPage = () => {
     }
   });
 
+  // Sorting and filtering state
+  const [sortConfig, setSortConfig] = useState({
+    key: 'table_number',
+    direction: 'asc'
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all'); // all, active, inactive, with_orders, without_orders
+
   useEffect(() => {
     loadQRCodes();
   }, []);
+
+  // Sorting and filtering logic
+  const sortedAndFilteredQRCodes = useMemo(() => {
+    let filtered = activeTab === 'table' ? qrCodes.tableQRCodes : qrCodes.customQRCodes;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(qrCode => {
+        if (activeTab === 'table') {
+          return qrCode.table_number.toString().includes(searchTerm);
+        } else {
+          return qrCode.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 qrCode.title?.toLowerCase().includes(searchTerm.toLowerCase());
+        }
+      });
+    }
+
+    // Apply status filter
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(qrCode => {
+        switch (filterStatus) {
+          case 'active':
+            return qrCode.is_active === true;
+          case 'inactive':
+            return qrCode.is_active === false;
+          case 'with_orders':
+            return (qrCode.active_orders || 0) > 0;
+          case 'without_orders':
+            return (qrCode.active_orders || 0) === 0;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      if (sortConfig.key === 'table_number') {
+        aValue = parseInt(a.table_number);
+        bValue = parseInt(b.table_number);
+      } else if (sortConfig.key === 'active_orders') {
+        aValue = a.active_orders || 0;
+        bValue = b.active_orders || 0;
+      } else if (sortConfig.key === 'total_orders') {
+        aValue = a.total_orders || 0;
+        bValue = b.total_orders || 0;
+      } else if (sortConfig.key === 'created_at') {
+        aValue = new Date(a.created_at);
+        bValue = new Date(b.created_at);
+      } else {
+        aValue = a[sortConfig.key];
+        bValue = b[sortConfig.key];
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+
+    return filtered;
+  }, [qrCodes, activeTab, searchTerm, filterStatus, sortConfig]);
+
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <ArrowUpDown className="h-4 w-4" />;
+    return sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
+  };
 
   const loadQRCodes = async () => {
     try {
@@ -190,7 +293,13 @@ const QRManagementPage = () => {
       setDeleteTarget(null);
     } catch (error) {
       console.error('Error deleting QR code:', error);
-      toast.error(error.response?.data?.error || 'Failed to delete QR code');
+      const errorMessage = error.response?.data?.error || 'Failed to delete QR code';
+      
+      if (errorMessage.includes('existing orders')) {
+        toast.error('Cannot delete QR code: Table has existing orders. Please complete or delete the orders first.');
+      } else {
+        toast.error(errorMessage);
+      }
     }
   };
 
@@ -255,13 +364,6 @@ const QRManagementPage = () => {
       <AdminHeader />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* URL Tip */}
-        <div className="mb-6 p-4 bg-sangeet-400/10 border border-sangeet-400/20 rounded-md">
-          <p className="text-sm text-sangeet-neutral-300">
-            💡 <strong>URL Tip:</strong> For development, QR codes use localhost. For production, update the base URL to your domain.
-          </p>
-        </div>
-        
         {/* Action Buttons */}
         <div className="flex justify-end space-x-3 mb-6">
           <button
@@ -283,7 +385,7 @@ const QRManagementPage = () => {
         <div className="border-b border-sangeet-neutral-700 mb-8">
           <nav className="-mb-px flex space-x-8">
             <button
-              onClick={() => setActiveTab('table')}
+              onClick={() => handleTabChange('table')}
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'table'
                   ? 'border-sangeet-400 text-sangeet-400'
@@ -294,7 +396,7 @@ const QRManagementPage = () => {
               Table QR Codes ({qrCodes.tableQRCodes.length})
             </button>
             <button
-              onClick={() => setActiveTab('custom')}
+              onClick={() => handleTabChange('custom')}
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'custom'
                   ? 'border-sangeet-400 text-sangeet-400'
@@ -307,197 +409,285 @@ const QRManagementPage = () => {
           </nav>
         </div>
 
-        {/* QR Codes Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {activeTab === 'table' ? (
-            qrCodes.tableQRCodes.map((qrCode) => (
-              <motion.div
-                key={qrCode.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-sangeet-neutral-900 rounded-xl shadow-lg border border-sangeet-neutral-700 overflow-hidden hover:border-sangeet-400/50 transition-all duration-300"
+        {/* Search and Filter Controls */}
+        <div className="mb-6 space-y-4">
+          {/* Search Bar */}
+          <div className="flex items-center space-x-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-sangeet-neutral-400" />
+              <input
+                type="text"
+                placeholder={activeTab === 'table' ? "Search by table number..." : "Search by purpose or title..."}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-sangeet-neutral-800 border border-sangeet-neutral-600 rounded-md text-sangeet-neutral-100 placeholder-sangeet-neutral-400 focus:outline-none focus:ring-2 focus:ring-sangeet-400 focus:border-transparent"
+              />
+            </div>
+            
+            {/* Filter Dropdown */}
+            <div className="relative">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="appearance-none bg-sangeet-neutral-800 border border-sangeet-neutral-600 rounded-md px-4 py-2 pr-8 text-sangeet-neutral-100 focus:outline-none focus:ring-2 focus:ring-sangeet-400 focus:border-transparent"
               >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <Smartphone className="h-5 w-5 text-sangeet-400" />
-                      <h3 className="text-lg font-semibold text-sangeet-neutral-100">
-                        Table {qrCode.table_number}
-                      </h3>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleViewAnalytics(qrCode, 'table')}
-                        className="p-1 text-sangeet-neutral-400 hover:text-sangeet-400 transition-colors"
-                        title="View Analytics"
-                      >
-                        <BarChart3 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDownloadQR(qrCode, 'table')}
-                        className="p-1 text-sangeet-neutral-400 hover:text-green-400 transition-colors"
-                        title="Download"
-                      >
-                        <Download className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteQR(qrCode, 'table')}
-                        className="p-1 text-sangeet-neutral-400 hover:text-red-400 transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
+                <option value="all">All QR Codes</option>
+                {activeTab === 'table' && (
+                  <>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive Only</option>
+                    <option value="with_orders">With Active Orders</option>
+                    <option value="without_orders">Without Orders</option>
+                  </>
+                )}
+              </select>
+              <Filter className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-sangeet-neutral-400 pointer-events-none" />
+            </div>
 
-                  {/* QR Code Preview */}
-                  <div className="bg-sangeet-neutral-800 rounded-lg p-4 mb-4 flex justify-center">
-                    <img
-                      src={qrCode.qr_code_data}
-                      alt={`QR Code for Table ${qrCode.table_number}`}
-                      className="w-32 h-32"
-                    />
-                  </div>
+            {/* Sort Options */}
+            {activeTab === 'table' && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-sangeet-neutral-400">Sort by:</span>
+                <button
+                  onClick={() => handleSort('table_number')}
+                  className="flex items-center space-x-1 px-3 py-1 bg-sangeet-neutral-800 border border-sangeet-neutral-600 rounded-md text-sangeet-neutral-300 hover:bg-sangeet-neutral-700 transition-colors"
+                >
+                  <span>Table</span>
+                  {getSortIcon('table_number')}
+                </button>
+                <button
+                  onClick={() => handleSort('active_orders')}
+                  className="flex items-center space-x-1 px-3 py-1 bg-sangeet-neutral-800 border border-sangeet-neutral-600 rounded-md text-sangeet-neutral-300 hover:bg-sangeet-neutral-700 transition-colors"
+                >
+                  <span>Orders</span>
+                  {getSortIcon('active_orders')}
+                </button>
+                <button
+                  onClick={() => handleSort('created_at')}
+                  className="flex items-center space-x-1 px-3 py-1 bg-sangeet-neutral-800 border border-sangeet-neutral-600 rounded-md text-sangeet-neutral-300 hover:bg-sangeet-neutral-700 transition-colors"
+                >
+                  <span>Created</span>
+                  {getSortIcon('created_at')}
+                </button>
+              </div>
+            )}
+          </div>
 
-                  {/* Analytics Summary */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-sangeet-neutral-400">Total Orders</p>
-                      <p className="font-semibold text-sangeet-neutral-100">{qrCode.total_orders || 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-sangeet-neutral-400">Revenue</p>
-                      <p className="font-semibold text-sangeet-neutral-100">{formatCurrency(qrCode.total_revenue)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sangeet-neutral-400">Completed</p>
-                      <p className="font-semibold text-sangeet-neutral-100">{qrCode.completed_orders || 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-sangeet-neutral-400">Last Order</p>
-                      <p className="font-semibold text-xs text-sangeet-neutral-300">
-                        {qrCode.last_order_date ? formatDate(qrCode.last_order_date) : 'Never'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-sangeet-neutral-700">
-                    <p className="text-xs text-sangeet-neutral-500 truncate">
-                      {qrCode.qr_code_url}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          ) : (
-            qrCodes.customQRCodes.map((qrCode) => (
-              <motion.div
-                key={qrCode.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-sangeet-neutral-900 rounded-xl shadow-lg border border-sangeet-neutral-700 overflow-hidden hover:border-sangeet-400/50 transition-all duration-300"
+          {/* Results Summary */}
+          <div className="flex items-center justify-between text-sm text-sangeet-neutral-400">
+            <span>
+              Showing {sortedAndFilteredQRCodes.length} of {activeTab === 'table' ? qrCodes.tableQRCodes.length : qrCodes.customQRCodes.length} QR codes
+            </span>
+            {(searchTerm || filterStatus !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterStatus('all');
+                }}
+                className="text-sangeet-400 hover:text-sangeet-300 transition-colors"
               >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <Globe className="h-5 w-5 text-green-400" />
-                      <h3 className="text-lg font-semibold text-sangeet-neutral-100">
-                        {qrCode.title || qrCode.purpose}
-                      </h3>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleViewAnalytics(qrCode, 'custom')}
-                        className="p-1 text-sangeet-neutral-400 hover:text-sangeet-400 transition-colors"
-                        title="View Analytics"
-                      >
-                        <BarChart3 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDownloadQR(qrCode, 'custom')}
-                        className="p-1 text-sangeet-neutral-400 hover:text-green-400 transition-colors"
-                        title="Download"
-                      >
-                        <Download className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteQR(qrCode, 'custom')}
-                        className="p-1 text-sangeet-neutral-400 hover:text-red-400 transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* QR Code Preview */}
-                  <div className="bg-sangeet-neutral-800 rounded-lg p-4 mb-4 flex justify-center">
-                    <img
-                      src={qrCode.qr_code_data}
-                      alt={`QR Code for ${qrCode.purpose}`}
-                      className="w-32 h-32"
-                    />
-                  </div>
-
-                  {/* QR Code Info */}
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <p className="text-sangeet-neutral-400">Purpose</p>
-                      <p className="font-semibold text-sangeet-neutral-100">{qrCode.purpose}</p>
-                    </div>
-                    <div>
-                      <p className="text-sangeet-neutral-400">Status</p>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(qrCode.status)}`}>
-                        {qrCode.status === 'active' ? (
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                        ) : (
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                        )}
-                        {qrCode.status}
-                      </span>
-                    </div>
-                    {qrCode.expires_at && (
-                      <div>
-                        <p className="text-sangeet-neutral-400">Expires</p>
-                        <p className="font-semibold text-xs text-sangeet-neutral-300">{formatDate(qrCode.expires_at)}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-sangeet-neutral-700">
-                    <p className="text-xs text-sangeet-neutral-500 truncate">
-                      {qrCode.target_url}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          )}
+                Clear filters
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Empty State */}
-        {((activeTab === 'table' && qrCodes.tableQRCodes.length === 0) ||
-          (activeTab === 'custom' && qrCodes.customQRCodes.length === 0)) && (
+                {/* QR Codes Grid */}
+        {sortedAndFilteredQRCodes.length === 0 ? (
           <div className="text-center py-12">
-            <QrCode className="h-12 w-12 text-sangeet-neutral-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-sangeet-neutral-100 mb-2">
-              No {activeTab === 'table' ? 'Table' : 'Custom'} QR Codes
+            <QrCode className="h-16 w-16 text-sangeet-neutral-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-sangeet-neutral-400 mb-2">
+              No QR codes found
             </h3>
-            <p className="text-sangeet-neutral-400 mb-6">
-              {activeTab === 'table' 
-                ? 'Generate QR codes for your restaurant tables to enable contactless ordering.'
-                : 'Create custom QR codes for marketing, events, or special promotions.'
+            <p className="text-sangeet-neutral-500">
+              {searchTerm || filterStatus !== 'all' 
+                ? 'Try adjusting your search or filter criteria'
+                : `No ${activeTab === 'table' ? 'table' : 'custom'} QR codes available yet`
               }
             </p>
-            <button
-              onClick={() => setShowGenerateModal(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-sangeet-neutral-950 bg-sangeet-400 hover:bg-sangeet-500 transition-colors"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Generate Your First QR Code
-            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {activeTab === 'table' 
+              ? sortedAndFilteredQRCodes.map((qrCode) => (
+                  <motion.div
+                    key={qrCode.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-sangeet-neutral-900 rounded-xl shadow-lg border border-sangeet-neutral-700 overflow-hidden hover:border-sangeet-400/50 transition-all duration-300"
+                  >
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-2">
+                          <Smartphone className="h-5 w-5 text-sangeet-400" />
+                          <h3 className="text-lg font-semibold text-sangeet-neutral-100">
+                            Table {qrCode.table_number}
+                          </h3>
+                          {(qrCode.active_orders || 0) > 0 && (
+                            <span className="px-2 py-1 text-xs bg-orange-400/20 text-orange-400 border border-orange-400/30 rounded-full">
+                              {qrCode.active_orders} active orders
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleViewAnalytics(qrCode, 'table')}
+                            className="p-1 text-sangeet-neutral-400 hover:text-sangeet-400 transition-colors"
+                            title="View Analytics"
+                          >
+                            <BarChart3 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadQR(qrCode, 'table')}
+                            className="p-1 text-sangeet-neutral-400 hover:text-green-400 transition-colors"
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteQR(qrCode, 'table')}
+                            className={`p-1 transition-colors ${
+                              (qrCode.active_orders || 0) > 0 
+                                ? 'text-red-400/50 cursor-not-allowed' 
+                                : 'text-sangeet-neutral-400 hover:text-red-400'
+                            }`}
+                            title={(qrCode.active_orders || 0) > 0 
+                              ? `Cannot delete: ${qrCode.active_orders} active orders` 
+                              : 'Delete QR code'
+                            }
+                            disabled={(qrCode.active_orders || 0) > 0}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* QR Code Preview */}
+                      <div className="bg-sangeet-neutral-800 rounded-lg p-4 mb-4 flex justify-center">
+                        <img
+                          src={qrCode.qr_code_data}
+                          alt={`QR Code for Table ${qrCode.table_number}`}
+                          className="w-32 h-32"
+                        />
+                      </div>
+
+                      {/* Analytics Summary */}
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-sangeet-neutral-400">Total Orders</p>
+                          <p className="font-semibold text-sangeet-neutral-100">{qrCode.total_orders || 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-sangeet-neutral-400">Revenue</p>
+                          <p className="font-semibold text-sangeet-neutral-100">{formatCurrency(qrCode.total_revenue)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sangeet-neutral-400">Active Orders</p>
+                          <p className="font-semibold text-sangeet-neutral-100">{qrCode.active_orders || 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-sangeet-neutral-400">Last Order</p>
+                          <p className="font-semibold text-xs text-sangeet-neutral-300">
+                            {qrCode.last_order_date ? formatDate(qrCode.last_order_date) : 'Never'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-sangeet-neutral-700">
+                        <p className="text-xs text-sangeet-neutral-500 truncate">
+                          {qrCode.qr_code_url}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              : sortedAndFilteredQRCodes.map((qrCode) => (
+                  <motion.div
+                    key={qrCode.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-sangeet-neutral-900 rounded-xl shadow-lg border border-sangeet-neutral-700 overflow-hidden hover:border-sangeet-400/50 transition-all duration-300"
+                  >
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-2">
+                          <Globe className="h-5 w-5 text-green-400" />
+                          <h3 className="text-lg font-semibold text-sangeet-neutral-100">
+                            {qrCode.title || qrCode.purpose}
+                          </h3>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleViewAnalytics(qrCode, 'custom')}
+                            className="p-1 text-sangeet-neutral-400 hover:text-sangeet-400 transition-colors"
+                            title="View Analytics"
+                          >
+                            <BarChart3 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadQR(qrCode, 'custom')}
+                            className="p-1 text-sangeet-neutral-400 hover:text-green-400 transition-colors"
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteQR(qrCode, 'custom')}
+                            className="p-1 text-sangeet-neutral-400 hover:text-red-400 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* QR Code Preview */}
+                      <div className="bg-sangeet-neutral-800 rounded-lg p-4 mb-4 flex justify-center">
+                        <img
+                          src={qrCode.qr_code_data}
+                          alt={`QR Code for ${qrCode.purpose}`}
+                          className="w-32 h-32"
+                        />
+                      </div>
+
+                      {/* QR Code Info */}
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <p className="text-sangeet-neutral-400">Purpose</p>
+                          <p className="font-semibold text-sangeet-neutral-100">{qrCode.purpose}</p>
+                        </div>
+                        <div>
+                          <p className="text-sangeet-neutral-400">Status</p>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(qrCode.status)}`}>
+                            {qrCode.status === 'active' ? (
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                            ) : (
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                            )}
+                            {qrCode.status}
+                          </span>
+                        </div>
+                        {qrCode.expires_at && (
+                          <div>
+                            <p className="text-sangeet-neutral-400">Expires</p>
+                            <p className="font-semibold text-xs text-sangeet-neutral-300">{formatDate(qrCode.expires_at)}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-sangeet-neutral-700">
+                        <p className="text-xs text-sangeet-neutral-500 truncate">
+                          {qrCode.target_url}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+            }
           </div>
         )}
+
+
       </div>
 
       {/* Generate QR Code Modal */}

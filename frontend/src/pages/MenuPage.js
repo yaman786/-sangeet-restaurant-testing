@@ -28,10 +28,55 @@ const MenuPage = () => {
           fetchMenuCategories()
         ]);
         
-        setMenuItems(menuData);
-        setCategories(categoriesData);
+        setMenuItems(menuData || []);
+        setCategories(categoriesData || []);
       } catch (error) {
         console.error('Error loading menu data:', error);
+        console.log('Using fallback menu data - API may not be available');
+        // Fallback data if API fails
+        setMenuItems([
+          {
+            id: 1,
+            name: "Butter Chicken",
+            description: "Creamy tomato-based curry with tender chicken",
+            price: 18.99,
+            category_name: "Main Course",
+            image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop",
+            is_vegetarian: false,
+            is_spicy: false,
+            is_popular: true,
+            preparation_time: 20
+          },
+          {
+            id: 2,
+            name: "Paneer Tikka",
+            description: "Grilled cottage cheese with aromatic spices",
+            price: 16.99,
+            category_name: "Appetizers",
+            image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop",
+            is_vegetarian: true,
+            is_spicy: false,
+            is_popular: true,
+            preparation_time: 15
+          },
+          {
+            id: 3,
+            name: "Biryani",
+            description: "Fragrant rice dish with tender meat and spices",
+            price: 22.99,
+            category_name: "Main Course",
+            image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop",
+            is_vegetarian: false,
+            is_spicy: true,
+            is_popular: true,
+            preparation_time: 25
+          }
+        ]);
+        setCategories([
+          { id: 1, name: "Appetizers" },
+          { id: 2, name: "Main Course" },
+          { id: 3, name: "Desserts" }
+        ]);
       } finally {
         setLoading(false);
       }

@@ -438,37 +438,37 @@ export const changePassword = async (passwordData) => {
 // User management API calls
 export const getAllUsers = async () => {
   return apiCallWrapper(async () => {
-    return await api.get('/users');
+    return await api.get('/auth/users');
   }, 'getAllUsers');
 };
 
 export const createUser = async (userData) => {
   return apiCallWrapper(async () => {
-    return await api.post('/users', userData);
+    return await api.post('/auth/users', userData);
   }, 'createUser', false);
 };
 
 export const updateUser = async (id, userData) => {
   return apiCallWrapper(async () => {
-    return await api.put(`/users/${encodeURIComponent(id)}`, userData);
+    return await api.put(`/auth/users/${encodeURIComponent(id)}`, userData);
   }, 'updateUser', false);
 };
 
 export const deleteUser = async (id) => {
   return apiCallWrapper(async () => {
-    return await api.delete(`/users/${encodeURIComponent(id)}`);
+    return await api.delete(`/auth/users/${encodeURIComponent(id)}`);
   }, 'deleteUser', false);
 };
 
 export const toggleUserStatus = async (id) => {
   return apiCallWrapper(async () => {
-    return await api.patch(`/users/${encodeURIComponent(id)}/toggle-status`);
+    return await api.patch(`/auth/users/${encodeURIComponent(id)}/toggle-status`);
   }, 'toggleUserStatus', false);
 };
 
 export const getUserStats = async () => {
   return apiCallWrapper(async () => {
-    return await api.get('/users/stats');
+    return await api.get('/auth/users/stats');
   }, 'getUserStats');
 };
 
@@ -524,25 +524,25 @@ export const getAllQRCodes = async () => {
 
 export const generateTableQRCode = async (qrData) => {
   return apiCallWrapper(async () => {
-    return await api.post('/qr-codes/table', qrData);
+    return await api.post('/qr-codes/generate/table', qrData);
   }, 'generateTableQRCode', false);
 };
 
 export const generateCustomQRCode = async (qrData) => {
   return apiCallWrapper(async () => {
-    return await api.post('/qr-codes/custom', qrData);
+    return await api.post('/qr-codes/generate/custom', qrData);
   }, 'generateCustomQRCode', false);
 };
 
 export const bulkGenerateTableQRCodes = async (qrData) => {
   return apiCallWrapper(async () => {
-    return await api.post('/qr-codes/bulk-table', qrData);
+    return await api.post('/qr-codes/generate/bulk', qrData);
   }, 'bulkGenerateTableQRCodes', false);
 };
 
 export const getQRCodeAnalytics = async (type, qrCodeId) => {
   return apiCallWrapper(async () => {
-    return await api.get(`/qr-codes/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}/analytics`);
+    return await api.get(`/qr-codes/analytics/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}`);
   }, 'getQRCodeAnalytics');
 };
 
@@ -560,8 +560,7 @@ export const deleteQRCode = async (type, qrCodeId) => {
 
 export const downloadPrintableQRCode = async (type, qrCodeId, format = 'png') => {
   return apiCallWrapper(async () => {
-    const params = new URLSearchParams({ format });
-    return await api.get(`/qr-codes/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}/download?${params.toString()}`, {
+    return await api.get(`/qr-codes/print/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}/${encodeURIComponent(format)}`, {
       responseType: 'blob'
     });
   }, 'downloadPrintableQRCode');

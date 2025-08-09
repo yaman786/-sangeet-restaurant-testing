@@ -26,18 +26,18 @@ router.get('/qr/generate/:tableNumber', generateTableQRCode);
 router.get('/qr/generate-all', generateAllTableQRCodes);
 
 // Order routes
-router.post('/orders', createOrder);
-router.get('/orders/stats', getOrderStats);
-router.get('/orders/table/:tableId', getOrdersByTable);
+router.post('/', createOrder);
+router.get('/stats', getOrderStats);
+router.get('/table/:tableId', getOrdersByTable);
 
 // Admin routes (place specific routes before parameterized routes)
-router.get('/orders/search', searchOrders);
-router.get('/orders', getAllOrders);
-router.patch('/orders/bulk-status', bulkUpdateOrderStatus);
+router.get('/search', searchOrders);
+router.get('/', getAllOrders);
+router.patch('/bulk-status', bulkUpdateOrderStatus);
 
 // Individual order routes (place after specific routes)
-router.get('/orders/:id', validateId, getOrderById);
-router.patch('/orders/:id/status', validateId, updateOrderStatus);
-router.delete('/orders/:id', validateId, deleteOrder);
+router.get('/:id', validateId, getOrderById);
+router.patch('/:id/status', validateId, updateOrderStatus);
+router.delete('/:id', validateId, deleteOrder);
 
 module.exports = router; 

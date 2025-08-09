@@ -42,6 +42,14 @@ const eventSchema = Joi.object({
   is_featured: Joi.boolean().default(false)
 });
 
+// Table validation schema
+const tableSchema = Joi.object({
+  table_number: Joi.string().min(1).max(50).required(),
+  capacity: Joi.number().integer().min(1).max(20).required(),
+  qr_code: Joi.string().optional(),
+  location: Joi.string().max(100).optional()
+});
+
 // Validation middleware function
 const validateRequest = (schema) => {
   return (req, res, next) => {
@@ -61,6 +69,7 @@ const validateMenuItem = validateRequest(menuItemSchema);
 const validateReservation = validateRequest(reservationSchema);
 const validateReview = validateRequest(reviewSchema);
 const validateEvent = validateRequest(eventSchema);
+const validateTableData = validateRequest(tableSchema);
 
 // ID validation middleware
 const validateId = (req, res, next) => {
@@ -102,6 +111,7 @@ module.exports = {
   validateReservation,
   validateReview,
   validateEvent,
+  validateTableData,
   validateId,
   validateReservationDate
 }; 

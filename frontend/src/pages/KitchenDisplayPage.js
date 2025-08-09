@@ -21,29 +21,40 @@ const KitchenDisplayPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if kitchen user or admin is logged in
-    const kitchenToken = localStorage.getItem('kitchenToken');
+    // Check if admin or kitchen user is logged in (admin takes priority)
     const adminToken = localStorage.getItem('adminToken');
-    const kitchenUser = localStorage.getItem('kitchenUser');
+    const kitchenToken = localStorage.getItem('kitchenToken');
     const adminUser = localStorage.getItem('adminUser');
+    const kitchenUser = localStorage.getItem('kitchenUser');
     
-    if (kitchenToken && kitchenUser) {
+    console.log('🔍 Kitchen Display Auth Check:');
+    console.log('Admin Token:', adminToken ? 'Present' : 'Not found');
+    console.log('Kitchen Token:', kitchenToken ? 'Present' : 'Not found');
+    console.log('Admin User:', adminUser ? 'Present' : 'Not found');
+    console.log('Kitchen User:', kitchenUser ? 'Present' : 'Not found');
+    
+    if (adminToken && adminUser) {
       try {
-        setKitchenUser(JSON.parse(kitchenUser));
-        setUserType('kitchen');
-      } catch (error) {
-        console.error('Error parsing kitchen user data:', error);
-        navigate('/login');
-      }
-    } else if (adminToken && adminUser) {
-      try {
-        setKitchenUser(JSON.parse(adminUser));
+        const userData = JSON.parse(adminUser);
+        console.log('👑 Setting as Admin:', userData.username, userData.role);
+        setKitchenUser(userData);
         setUserType('admin');
       } catch (error) {
         console.error('Error parsing admin user data:', error);
         navigate('/login');
       }
+    } else if (kitchenToken && kitchenUser) {
+      try {
+        const userData = JSON.parse(kitchenUser);
+        console.log('👨‍🍳 Setting as Kitchen Staff:', userData.username, userData.role);
+        setKitchenUser(userData);
+        setUserType('kitchen');
+      } catch (error) {
+        console.error('Error parsing kitchen user data:', error);
+        navigate('/login');
+      }
     } else {
+      console.log('❌ No valid tokens found, redirecting to login');
       navigate('/login');
     }
   }, [navigate]);
