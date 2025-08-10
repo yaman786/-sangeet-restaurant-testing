@@ -7,7 +7,7 @@ import { fetchAllReservations, updateReservationStatus, deleteReservation, fetch
 const ReservationManagementPage = () => {
   const [reservations, setReservations] = useState([]);
   const [tables, setTables] = useState([]);
-  const [stats, setStats] = useState({
+  // const [stats, setStats] = useState({
     total: 0,
     pending: 0,
     confirmed: 0,
@@ -24,7 +24,7 @@ const ReservationManagementPage = () => {
   const [itemsPerPage] = useState(8);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState('connected');
+  // const [connectionStatus, setConnectionStatus] = useState('connected'); // TODO: Implement connection status
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -92,7 +92,7 @@ const ReservationManagementPage = () => {
     }
   };
 
-  const handleAssignTable = async (reservationId, tableId) => {
+  // const handleAssignTable = async (reservationId, tableId) => {
     if (!tableId) return;
     
     try {
@@ -147,7 +147,7 @@ const ReservationManagementPage = () => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  const getTableNumber = (tableId) => {
+  // const getTableNumber = (tableId) => {
     const table = tables.find(t => t.id === tableId);
     return table ? table.table_number : 'Not assigned';
   };

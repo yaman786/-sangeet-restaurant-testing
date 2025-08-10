@@ -39,8 +39,8 @@ const HomePage = ({ menuItems, reviews, events }) => {
   };
   
   // State management for carousel functionality
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [mobileCurrentSlide, setMobileCurrentSlide] = useState(0);
+  // const [currentSlide, setCurrentSlide] = useState(0); // TODO: Implement carousel
+  // const [mobileCurrentSlide, setMobileCurrentSlide] = useState(0); // TODO: Implement mobile carousel
   const [currentEventsSlide, setCurrentEventsSlide] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -53,7 +53,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
   const isOpen = currentTime.getHours() >= 18 && currentTime.getHours() < 23;
 
   // Constants for reusable data
-  const DINING_AREAS = [
+  // const DINING_AREAS = [
     {
       image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=800&fit=crop",
       title: "Main Dining Hall",
@@ -129,7 +129,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
     }
   ];
 
-  const AWARDS = [
+  // const AWARDS = [
     { icon: "🏆", title: "Best New Restaurant", subtitle: "Hong Kong Food Awards 2024" },
     { icon: "👨‍👩‍👧‍👦", title: "Family Favorite", subtitle: "Local Community Choice" },
     { icon: "🎖️", title: "Chef's Choice Award", subtitle: "Culinary Excellence" }
@@ -190,7 +190,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
   ];
 
   // Carousel navigation functions
-  const navigateCarousel = (direction) => {
+  // const navigateCarousel = (direction) => {
     setCurrentSlide((prev) => {
       const newSlide = prev + direction;
       if (newSlide < 0) return 2;
@@ -199,11 +199,11 @@ const HomePage = ({ menuItems, reviews, events }) => {
     });
   };
 
-  const goToSlide = (index) => {
+  // const goToSlide = (index) => {
     setCurrentSlide(index);
   };
 
-  const navigateMobileCarousel = (direction) => {
+  // const navigateMobileCarousel = (direction) => {
     setMobileCurrentSlide((prev) => {
       const newSlide = prev + direction;
       if (newSlide < 0) return 2;
@@ -212,7 +212,7 @@ const HomePage = ({ menuItems, reviews, events }) => {
     });
   };
 
-  const goToMobileSlide = (index) => {
+  // const goToMobileSlide = (index) => {
     setMobileCurrentSlide(index);
   };
 

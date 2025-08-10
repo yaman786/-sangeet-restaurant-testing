@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 import AdminHeader from '../components/AdminHeader';
 
 const AdminOrdersPage = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // TODO: Implement navigation
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
