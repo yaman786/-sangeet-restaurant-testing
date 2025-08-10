@@ -50,7 +50,7 @@ const generateTableQRCode = async (req, res) => {
 
     if (inactiveTable.rows.length > 0) {
       // Reactivate the existing table with new QR code
-      const baseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+      const baseUrl = process.env.CLIENT_URL || 'https://heartfelt-gnome-7178c3.netlify.app';
       const qrUrl = customUrl || `${baseUrl}/qr/table-${tableNumber}`;
       
       const qrOptions = {
@@ -87,12 +87,11 @@ const generateTableQRCode = async (req, res) => {
     // Generate QR URL with automatic live URL detection
     let baseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
     
-    // Auto-detect live URL from request headers (for production)
-    if (!process.env.CLIENT_URL && req.headers.host) {
-      const protocol = req.headers['x-forwarded-proto'] || 'http';
-      const host = req.headers.host;
-      baseUrl = `${protocol}://${host}`;
-      console.log(`🌐 Auto-detected base URL: ${baseUrl}`);
+    // For production, use the Netlify frontend URL
+    if (!process.env.CLIENT_URL) {
+      // Try to get the frontend URL from environment or use a default
+      baseUrl = process.env.FRONTEND_URL || 'https://heartfelt-gnome-7178c3.netlify.app';
+      console.log(`🌐 Using frontend URL: ${baseUrl}`);
     }
     
     const qrUrl = customUrl || `${baseUrl}/qr/table-${tableNumber}`;
@@ -477,8 +476,8 @@ const bulkGenerateTableQRCodes = async (req, res) => {
         );
 
         if (inactiveTable.rows.length > 0) {
-          // Reactivate the existing table with new QR code
-          const qrUrl = `${baseUrl || 'http://localhost:3000'}/qr/table-${tableNumber}`;
+                  // Reactivate the existing table with new QR code
+        const qrUrl = `${baseUrl || 'https://heartfelt-gnome-7178c3.netlify.app'}/qr/table-${tableNumber}`;
           const qrOptions = {
             width: 300,
             margin: 2,
@@ -503,7 +502,7 @@ const bulkGenerateTableQRCodes = async (req, res) => {
         }
 
         // Generate QR code
-        const qrUrl = `${baseUrl || 'http://localhost:3000'}/qr/table-${tableNumber}`;
+        const qrUrl = `${baseUrl || 'https://heartfelt-gnome-7178c3.netlify.app'}/qr/table-${tableNumber}`;
         const qrOptions = {
           width: 300,
           margin: 2,
