@@ -12,3 +12,9 @@
 
 [context.production.environment]
   REACT_APP_API_URL = "https://sangeet-restaurant-backend.onrender.com/api"
+
+[context.deploy-preview.environment]
+  REACT_APP_API_URL = "https://sangeet-restaurant-backend.onrender.com/api"
+
+[context.branch-deploy.environment]
+  REACT_APP_API_URL = "https://sangeet-restaurant-backend.onrender.com/api"
