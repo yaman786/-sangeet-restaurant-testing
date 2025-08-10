@@ -8,12 +8,12 @@ const ReservationManagementPage = () => {
   const [reservations, setReservations] = useState([]);
   const [tables, setTables] = useState([]);
   // const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    confirmed: 0,
-    completed: 0,
-    cancelled: 0
-  });
+  //   total: 0,
+  //   pending: 0,
+  //   confirmed: 0,
+  //   completed: 0,
+  //   cancelled: 0
+  // });
   const [filters, setFilters] = useState({
     status: '',
     date: '',
@@ -93,18 +93,18 @@ const ReservationManagementPage = () => {
   };
 
   // const handleAssignTable = async (reservationId, tableId) => {
-    if (!tableId) return;
+  //   if (!tableId) return;
     
-    try {
-      await updateReservation(reservationId, { table_id: parseInt(tableId) });
+  //   try {
+  //     await updateReservation(reservationId, { table_id: parseInt(tableId) });
       
-      // Update local state directly
-      setReservations(prev => prev.map(res => 
-        res.id === reservationId ? { ...res, table_id: parseInt(tableId) } : res
-      ));
+  //     // Update local state directly
+  //     setReservations(prev => prev.map(res => 
+  //       res.id === reservationId ? { ...res, table_id: parseInt(tableId) } : res
+  //     ));
       
-      toast.success('Table assigned successfully');
-    } catch (error) {
+  //     toast.success('Table assigned successfully');
+  //   } catch (error) {
       console.error('Error assigning table:', error);
       toast.error('Failed to assign table');
     }
@@ -148,9 +148,9 @@ const ReservationManagementPage = () => {
   };
 
   // const getTableNumber = (tableId) => {
-    const table = tables.find(t => t.id === tableId);
-    return table ? table.table_number : 'Not assigned';
-  };
+  //   const table = tables.find(t => t.id === tableId);
+  //   return table ? table.table_number : 'Not assigned';
+  // };
 
   // Filter reservations
   const filteredReservations = reservations.filter(reservation => {
