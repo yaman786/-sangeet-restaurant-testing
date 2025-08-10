@@ -105,10 +105,10 @@ const ReservationManagementPage = () => {
       
   //     toast.success('Table assigned successfully');
   //   } catch (error) {
-      console.error('Error assigning table:', error);
-      toast.error('Failed to assign table');
-    }
-  };
+  //     console.error('Error assigning table:', error);
+  //     toast.error('Failed to assign table');
+  //   }
+  // };
 
   const getStatusColor = (status) => {
     switch (status) {
