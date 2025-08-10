@@ -1,11 +1,9 @@
 [build]
-  base = "."
   command = "cd frontend && npm install && npm run build"
   publish = "frontend/build"
 
 [build.environment]
   NODE_VERSION = "18"
-  NPM_VERSION = "9"
 
 [[redirects]]
   from = "/*"
@@ -13,10 +11,4 @@
   status = 200
 
 [context.production.environment]
-  REACT_APP_API_URL = "https://sangeet-restaurant-backend.onrender.com/api"
-
-[context.deploy-preview.environment]
-  REACT_APP_API_URL = "https://sangeet-restaurant-backend.onrender.com/api"
-
-[context.branch-deploy.environment]
   REACT_APP_API_URL = "https://sangeet-restaurant-backend.onrender.com/api"
