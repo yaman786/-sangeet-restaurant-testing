@@ -54,34 +54,34 @@ const HomePage = ({ menuItems, reviews, events }) => {
 
   // Constants for reusable data
   // const DINING_AREAS = [
-    {
-      image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=800&fit=crop",
-      title: "Main Dining Hall",
-      subtitle: "Elegant & Spacious",
-      description: "Our grand dining hall accommodates 150+ guests with sophisticated decor and warm lighting, perfect for family gatherings and celebrations",
-      capacity: "150+ Seats",
-      bestFor: "Family Gatherings, Celebrations",
-      features: ["Sophisticated Decor", "Warm Lighting", "Group Seating"]
-    },
-    {
-      image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&h=800&fit=crop",
-      title: "Bar & Lounge",
-      subtitle: "Modern & Casual",
-      description: "Contemporary bar area with craft cocktails and casual dining, perfect for pre-dinner drinks or light meals",
-      capacity: "Cozy",
-      bestFor: "Drinks & Appetizers, Casual Dining",
-      features: ["Craft Cocktails", "Casual Seating", "Bar Service"]
-    },
-    {
-      image: "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1200&h=800&fit=crop",
-      title: "Private Dining Room",
-      subtitle: "Exclusive & Intimate",
-      description: "Exclusive private dining space for intimate gatherings, business meetings, and special occasions",
-      capacity: "Intimate",
-      bestFor: "Business Meetings, Special Occasions",
-      features: ["Private Service", "Customized Menu", "Intimate Setting"]
-    }
-  ];
+  //   {
+  //     image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=800&fit=crop",
+  //     title: "Main Dining Hall",
+  //     subtitle: "Elegant & Spacious",
+  //     description: "Our grand dining hall accommodates 150+ guests with sophisticated decor and warm lighting, perfect for family gatherings and celebrations",
+  //     capacity: "150+ Seats",
+  //     bestFor: "Family Gatherings, Celebrations",
+  //     features: ["Sophisticated Decor", "Warm Lighting", "Group Seating"]
+  //   },
+  //   {
+  //     image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&h=800&fit=crop",
+  //     title: "Bar & Lounge",
+  //     subtitle: "Modern & Casual",
+  //     description: "Contemporary bar area with craft cocktails and casual dining, perfect for pre-dinner drinks or light meals",
+  //     capacity: "Cozy",
+  //     bestFor: "Drinks & Appetizers, Casual Dining",
+  //     features: ["Craft Cocktails", "Casual Seating", "Bar Service"]
+  //   },
+  //   {
+  //     image: "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1200&h=800&fit=crop",
+  //     title: "Private Dining Room",
+  //     subtitle: "Exclusive & Intimate",
+  //     description: "Exclusive private dining space for intimate gatherings, business meetings, and special occasions",
+  //     capacity: "Intimate",
+  //     bestFor: "Business Meetings, Special Occasions",
+  //     features: ["Private Service", "Customized Menu", "Intimate Setting"]
+  //   }
+  // ];
 
   const HERO_STATS = [
     { value: "5,300", label: "Sq Ft" },
@@ -130,10 +130,10 @@ const HomePage = ({ menuItems, reviews, events }) => {
   ];
 
   // const AWARDS = [
-    { icon: "🏆", title: "Best New Restaurant", subtitle: "Hong Kong Food Awards 2024" },
-    { icon: "👨‍👩‍👧‍👦", title: "Family Favorite", subtitle: "Local Community Choice" },
-    { icon: "🎖️", title: "Chef's Choice Award", subtitle: "Culinary Excellence" }
-  ];
+  //   { icon: "🏆", title: "Best New Restaurant", subtitle: "Hong Kong Food Awards 2024" },
+  //   { icon: "👨‍👩‍👧‍👦", title: "Family Favorite", subtitle: "Local Community Choice" },
+  //   { icon: "🎖️", title: "Chef's Choice Award", subtitle: "Culinary Excellence" }
+  // ];
 
   // Sample upcoming events data
   const UPCOMING_EVENTS = [
@@ -191,30 +191,30 @@ const HomePage = ({ menuItems, reviews, events }) => {
 
   // Carousel navigation functions
   // const navigateCarousel = (direction) => {
-    setCurrentSlide((prev) => {
-      const newSlide = prev + direction;
-      if (newSlide < 0) return 2;
-      if (newSlide > 2) return 0;
-      return newSlide;
-    });
-  };
+  //   setCurrentSlide((prev) => {
+  //     const newSlide = prev + direction;
+  //     if (newSlide < 0) return 2;
+  //     if (newSlide > 2) return 0;
+  //     return newSlide;
+  //   });
+  // };
 
   // const goToSlide = (index) => {
-    setCurrentSlide(index);
-  };
+  //   setCurrentSlide(index);
+  // };
 
   // const navigateMobileCarousel = (direction) => {
-    setMobileCurrentSlide((prev) => {
-      const newSlide = prev + direction;
-      if (newSlide < 0) return 2;
-      if (newSlide > 2) return 0;
-      return newSlide;
-    });
-  };
+  //   setMobileCurrentSlide((prev) => {
+  //     const newSlide = prev + direction;
+  //     if (newSlide < 0) return 2;
+  //     if (newSlide > 2) return 0;
+  //     return newSlide;
+  //   });
+  // };
 
   // const goToMobileSlide = (index) => {
-    setMobileCurrentSlide(index);
-  };
+  //   setMobileCurrentSlide(index);
+  // };
 
   // Events carousel navigation
   const navigateEventsCarousel = (direction) => {
