@@ -7,13 +7,13 @@ import { fetchAllReservations, updateReservationStatus, deleteReservation, fetch
 const ReservationManagementPage = () => {
   const [reservations, setReservations] = useState([]);
   const [tables, setTables] = useState([]);
-  // const [stats, setStats] = useState({
-  //   total: 0,
-  //   pending: 0,
-  //   confirmed: 0,
-  //   completed: 0,
-  //   cancelled: 0
-  // });
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    confirmed: 0,
+    completed: 0,
+    cancelled: 0
+  });
   const [filters, setFilters] = useState({
     status: '',
     date: '',
@@ -24,7 +24,8 @@ const ReservationManagementPage = () => {
   const [itemsPerPage] = useState(8);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
-  // const [connectionStatus, setConnectionStatus] = useState('connected'); // TODO: Implement connection status
+  // eslint-disable-next-line no-unused-vars
+  const [connectionStatus, setConnectionStatus] = useState('connected');
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -92,23 +93,24 @@ const ReservationManagementPage = () => {
     }
   };
 
-  // const handleAssignTable = async (reservationId, tableId) => {
-  //   if (!tableId) return;
+  // eslint-disable-next-line no-unused-vars
+  const handleAssignTable = async (reservationId, tableId) => {
+    if (!tableId) return;
     
-  //   try {
-  //     await updateReservation(reservationId, { table_id: parseInt(tableId) });
+    try {
+      await updateReservation(reservationId, { table_id: parseInt(tableId) });
       
-  //     // Update local state directly
-  //     setReservations(prev => prev.map(res => 
-  //       res.id === reservationId ? { ...res, table_id: parseInt(tableId) } : res
-  //     ));
+      // Update local state directly
+      setReservations(prev => prev.map(res => 
+        res.id === reservationId ? { ...res, table_id: parseInt(tableId) } : res
+      ));
       
-  //     toast.success('Table assigned successfully');
-  //   } catch (error) {
-  //     console.error('Error assigning table:', error);
-  //     toast.error('Failed to assign table');
-  //   }
-  // };
+      toast.success('Table assigned successfully');
+    } catch (error) {
+      console.error('Error assigning table:', error);
+      toast.error('Failed to assign table');
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -147,10 +149,11 @@ const ReservationManagementPage = () => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  // const getTableNumber = (tableId) => {
-  //   const table = tables.find(t => t.id === tableId);
-  //   return table ? table.table_number : 'Not assigned';
-  // };
+  // eslint-disable-next-line no-unused-vars
+  const getTableNumber = (tableId) => {
+    const table = tables.find(t => t.id === tableId);
+    return table ? table.table_number : 'Not assigned';
+  };
 
   // Filter reservations
   const filteredReservations = reservations.filter(reservation => {

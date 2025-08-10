@@ -13,7 +13,8 @@ import toast from 'react-hot-toast';
 import AdminHeader from '../components/AdminHeader';
 
 const AdminOrdersPage = () => {
-  // const navigate = useNavigate(); // TODO: Implement navigation
+  // eslint-disable-next-line no-unused-vars
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -15,7 +15,8 @@ const KitchenDisplayPage = () => {
     completed: 0
   });
   const [soundEnabled, setSoundEnabled] = useState(true);
-  // const [connectionStatus, setConnectionStatus] = useState('connected'); // TODO: Implement connection status
+  // eslint-disable-next-line no-unused-vars
+  const [connectionStatus, setConnectionStatus] = useState('connected');
   const [kitchenUser, setKitchenUser] = useState(null);
   const [userType, setUserType] = useState(null); // 'admin' or 'kitchen'
   const navigate = useNavigate();
