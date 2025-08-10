@@ -2,9 +2,7 @@ import axios from 'axios';
 
 // Constants
 const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 
-           (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : 
-           'https://sangeet-restaurant-backend.onrender.com/api'),
+  BASE_URL: 'https://sangeet-restaurant-backend.onrender.com/api',
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000
