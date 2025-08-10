@@ -7,6 +7,7 @@ import { fetchAllReservations, updateReservationStatus, deleteReservation, fetch
 const ReservationManagementPage = () => {
   const [reservations, setReservations] = useState([]);
   const [tables, setTables] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
