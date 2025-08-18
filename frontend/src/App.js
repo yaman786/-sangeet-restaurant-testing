@@ -109,6 +109,13 @@ function App() {
   
   const location = useLocation();
 
+  // Temporary debug log
+  console.log('🔍 API URL Debug:', {
+    REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    hostname: window.location.hostname
+  });
+
   // Memoized route checks for performance
   const routeConfig = useMemo(() => ({
     isQRRoute: location.pathname.startsWith('/qr/'),
