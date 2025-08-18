@@ -145,6 +145,19 @@ function createApp() {
     });
   });
 
+  // Temporary migration endpoint (remove after use)
+  app.post('/api/migrate', async (req, res) => {
+    try {
+      console.log('🚀 Starting migration via API endpoint...');
+      const { runMigrations } = require('../scripts/migrate-render');
+      await runMigrations();
+      res.json({ success: true, message: 'Migration completed successfully' });
+    } catch (error) {
+      console.error('Migration failed:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // API routes
   app.use('/api/auth', authRoutes);
   app.use('/api/menu', menuRoutes);
