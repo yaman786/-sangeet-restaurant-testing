@@ -24,6 +24,6 @@ services:
     healthCheckPath: /api/health
 
   # PostgreSQL Database
-  - type: postgresql
+  - type: pserv
     name: sangeet-restaurant-db
     plan: free
