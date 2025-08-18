@@ -27,4 +27,3 @@ services:
   - type: pserv
     name: sangeet-restaurant-db
     plan: free
-    startCommand: postgres
