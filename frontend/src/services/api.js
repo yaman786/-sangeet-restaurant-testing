@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 const API_CONFIG = {
   BASE_URL: process.env.REACT_APP_API_URL || 
            (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : 
-           'https://sangeet-restaurant-backend.onrender.com/api'),
+           'https://sangeet-restaurant-api.onrender.com/api'),
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000
