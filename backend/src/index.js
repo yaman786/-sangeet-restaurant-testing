@@ -101,18 +101,20 @@ function createApp() {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
   }));
 
-  // Rate limiting
-  const limiter = rateLimit({
-    windowMs: CONFIG.RATE_LIMIT_WINDOW,
-    max: CONFIG.RATE_LIMIT_MAX,
-    message: {
-      error: 'Too many requests from this IP, please try again later.',
-      retryAfter: Math.ceil(CONFIG.RATE_LIMIT_WINDOW / 1000)
-    },
-    standardHeaders: true,
-    legacyHeaders: false
-  });
-  app.use('/api/', limiter);
+  // Rate limiting - Disabled for development
+  if (CONFIG.NODE_ENV === 'production') {
+    const limiter = rateLimit({
+      windowMs: CONFIG.RATE_LIMIT_WINDOW,
+      max: CONFIG.RATE_LIMIT_MAX,
+      message: {
+        error: 'Too many requests from this IP, please try again later.',
+        retryAfter: Math.ceil(CONFIG.RATE_LIMIT_WINDOW / 1000)
+      },
+      standardHeaders: true,
+      legacyHeaders: false
+    });
+    app.use('/api/', limiter);
+  }
 
   // Body parsing middleware
   app.use(express.json({ 

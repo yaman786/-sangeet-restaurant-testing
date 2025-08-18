@@ -47,6 +47,10 @@ const AnalyticsReportsPage = () => {
     const loadAnalytics = async () => {
       try {
         setLoading(true);
+        // Calculate default date range (last 30 days)
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
         const [
           business,
           trends,
@@ -58,7 +62,7 @@ const AnalyticsReportsPage = () => {
           getReservationTrends(period),
           getMenuAnalytics(),
           getCustomerInsights(),
-          getPerformanceMetrics()
+          getPerformanceMetrics(startDate, endDate)
         ]);
 
         setBusinessData(business.analytics);

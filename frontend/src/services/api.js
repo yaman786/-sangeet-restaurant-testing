@@ -1,8 +1,11 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 // Constants
 const API_CONFIG = {
-  BASE_URL: 'https://sangeet-restaurant-backend.onrender.com/api',
+  BASE_URL: process.env.REACT_APP_API_URL || 
+           (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : 
+           'https://sangeet-restaurant-backend.onrender.com/api'),
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000
@@ -152,12 +155,15 @@ api.interceptors.response.use(
  */
 const apiCallWrapper = async (apiCall, errorContext = 'API call', enableRetry = true) => {
   try {
+    let result;
     if (enableRetry) {
-      return await retryApiCall(apiCall);
+      result = await retryApiCall(apiCall);
+    } else {
+      result = await apiCall();
     }
-    return await apiCall();
+    return result;
   } catch (error) {
-    console.error(`Error in ${errorContext}:`, error);
+    console.error(`❌ Error in ${errorContext}:`, error);
     throw error;
   }
 };
@@ -207,6 +213,24 @@ export const fetchReviews = async () => {
   return apiCallWrapper(async () => {
     return await api.get('/reviews');
   }, 'fetchReviews');
+};
+
+export const fetchVerifiedReviews = async () => {
+  return apiCallWrapper(async () => {
+    return await api.get('/reviews/verified');
+  }, 'fetchVerifiedReviews');
+};
+
+export const getOrderById = async (orderId) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/orders/${orderId}`);
+  }, 'getOrderById');
+};
+
+export const getOrdersByTable = async (tableNumber) => {
+  return apiCallWrapper(async () => {
+    return await api.get(`/orders/table-number/${tableNumber}`);
+  }, 'getOrdersByTable');
 };
 
 export const submitReview = async (reviewData) => {
@@ -307,6 +331,8 @@ export const fetchReservationStats = async (date = null) => {
   }, 'fetchReservationStats');
 };
 
+
+
 // Events API calls
 export const fetchEvents = async () => {
   return apiCallWrapper(async () => {
@@ -396,6 +422,8 @@ export const updateOrderStatus = async (orderId, status) => {
   }, 'updateOrderStatus', false);
 };
 
+
+
 export const fetchAllOrders = async (queryParams = '') => {
   return apiCallWrapper(async () => {
     const url = queryParams ? `/orders?${queryParams}` : '/orders';
@@ -409,6 +437,8 @@ export const fetchOrderStats = async () => {
   }, 'fetchOrderStats');
 };
 
+
+
 // Health check
 export const checkApiHealth = async () => {
   return apiCallWrapper(async () => {
@@ -418,9 +448,16 @@ export const checkApiHealth = async () => {
 
 // Authentication API calls
 export const loginUser = async (credentials) => {
-  return apiCallWrapper(async () => {
-    return await api.post('/auth/login', credentials);
-  }, 'loginUser', false);
+  try {
+    const result = await apiCallWrapper(async () => {
+      const response = await api.post('/auth/login', credentials);
+      return response;
+    }, 'loginUser', false);
+    return result;
+  } catch (error) {
+    console.error('❌ loginUser failed:', error);
+    throw error;
+  }
 };
 
 export const getProfile = async () => {
@@ -528,11 +565,7 @@ export const generateTableQRCode = async (qrData) => {
   }, 'generateTableQRCode', false);
 };
 
-export const generateCustomQRCode = async (qrData) => {
-  return apiCallWrapper(async () => {
-    return await api.post('/qr-codes/generate/custom', qrData);
-  }, 'generateCustomQRCode', false);
-};
+
 
 export const bulkGenerateTableQRCodes = async (qrData) => {
   return apiCallWrapper(async () => {
@@ -540,30 +573,82 @@ export const bulkGenerateTableQRCodes = async (qrData) => {
   }, 'bulkGenerateTableQRCodes', false);
 };
 
-export const getQRCodeAnalytics = async (type, qrCodeId) => {
+export const getQRCodeAnalytics = async (qrCodeId) => {
   return apiCallWrapper(async () => {
-    return await api.get(`/qr-codes/analytics/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}`);
+    return await api.get(`/qr-codes/analytics/${encodeURIComponent(qrCodeId)}`);
   }, 'getQRCodeAnalytics');
 };
 
-export const updateQRCodeDesign = async (type, qrCodeId, design) => {
+export const updateQRCodeDesign = async (qrCodeId, design) => {
   return apiCallWrapper(async () => {
-    return await api.put(`/qr-codes/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}/design`, design);
+    return await api.put(`/qr-codes/${encodeURIComponent(qrCodeId)}/design`, design);
   }, 'updateQRCodeDesign', false);
 };
 
-export const deleteQRCode = async (type, qrCodeId) => {
+export const deleteQRCode = async (qrCodeId) => {
   return apiCallWrapper(async () => {
-    return await api.delete(`/qr-codes/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}`);
+    return await api.delete(`/qr-codes/${encodeURIComponent(qrCodeId)}`);
   }, 'deleteQRCode', false);
 };
 
-export const downloadPrintableQRCode = async (type, qrCodeId, format = 'png') => {
-  return apiCallWrapper(async () => {
-    return await api.get(`/qr-codes/print/${encodeURIComponent(type)}/${encodeURIComponent(qrCodeId)}/${encodeURIComponent(format)}`, {
-      responseType: 'blob'
+export const downloadPrintableQRCode = async (qrCodeId, format = 'png', design = 'classic', theme = 'modern') => {
+  try {
+    const timestamp = Date.now(); // Add timestamp for cache busting
+    console.log(`Downloading QR code: ${qrCodeId}, format: ${format}, design: ${design}, theme: ${theme}`);
+    
+    const token = getAuthToken();
+    console.log('🔑 Auth token:', token ? 'Present' : 'Missing');
+    console.log('🌐 API URL:', `${API_CONFIG.BASE_URL}/qr-codes/print/${qrCodeId}/${format}?design=${design}&theme=${theme}&t=${timestamp}`);
+    
+    const response = await fetch(`${API_CONFIG.BASE_URL}/qr-codes/print/${qrCodeId}/${format}?design=${design}&theme=${theme}&t=${timestamp}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
     });
-  }, 'downloadPrintableQRCode');
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Server response error:', response.status, errorText);
+      throw new Error(`Failed to download QR code: ${response.status} ${response.statusText}`);
+    }
+
+    // Check if the response is actually an image
+    const contentType = response.headers.get('content-type');
+    console.log('Response content type:', contentType);
+    
+    if (!contentType || !contentType.startsWith('image/')) {
+      console.error('Invalid content type:', contentType);
+      throw new Error('Server did not return an image');
+    }
+
+    const blob = await response.blob();
+    console.log('Blob size:', blob.size, 'bytes');
+    console.log('Blob type:', blob.type);
+    
+    if (blob.size === 0) {
+      throw new Error('Downloaded file is empty');
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sangeet-table-${qrCodeId}-qr.${format}`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    // Show success message
+    if (typeof toast !== 'undefined') {
+      toast.success('Beautiful QR code downloaded successfully!');
+    }
+  } catch (error) {
+    console.error('Error downloading QR code:', error);
+    if (typeof toast !== 'undefined') {
+      toast.error(`Failed to download QR code: ${error.message}`);
+    }
+  }
 };
 
 // Website management API calls
@@ -628,7 +713,7 @@ export const getBusinessAnalytics = async (timeframe = '30') => {
 
 export const getReservationTrends = async (period = 'month') => {
   return apiCallWrapper(async () => {
-    return await api.get(`/analytics/reservations?period=${encodeURIComponent(period)}`);
+    return await api.get(`/analytics/reservations/trends?period=${encodeURIComponent(period)}`);
   }, 'getReservationTrends');
 };
 

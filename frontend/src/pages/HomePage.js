@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import logo from '../assets/images/logo.png';
+import ReviewsSection from '../components/ReviewsSection';
 
 /**
  * HomePage Component
@@ -911,6 +912,9 @@ const HomePage = ({ menuItems, reviews, events }) => {
           </motion.div>
         </div>
       </section>
+
+      {/* Customer Reviews Section */}
+      <ReviewsSection />
 
       {/* Enhanced CTA Section - Final Call to Action */}
       <section className="relative py-24 bg-gradient-to-br from-sangeet-neutral-900 via-sangeet-neutral-800 to-sangeet-neutral-900 overflow-hidden">

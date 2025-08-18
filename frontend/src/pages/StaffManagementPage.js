@@ -128,7 +128,7 @@ const StaffManagementPage = () => {
         recent: 3
       });
       
-      toast.info('Using demo data - API may not be available');
+              toast.success('Using demo data - API may not be available');
     }
   };
 

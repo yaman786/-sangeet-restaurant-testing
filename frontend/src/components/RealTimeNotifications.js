@@ -6,16 +6,31 @@ import toast from 'react-hot-toast';
 
 const RealTimeNotifications = () => {
   const [notifications, setNotifications] = useState([]);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(true); // Start as connected to avoid immediate warnings
   const [showNotifications, setShowNotifications] = useState(false);
+  const [connectionError, setConnectionError] = useState(null);
 
   useEffect(() => {
-    // Connect to WebSocket
-    socketService.connect();
-    setIsConnected(true);
+    // Connect to WebSocket for real-time notifications
+    try {
+      socketService.connect();
+      socketService.joinAdmin();
+      
+      // Check connection status after a longer delay to allow for connection
+      setTimeout(() => {
+        setIsConnected(socketService.isConnected);
+        if (!socketService.isConnected) {
+          setConnectionError('Socket connection failed');
+        } else {
+          setConnectionError(null);
+        }
+      }, 5000); // Increased delay to 5 seconds
+    } catch (error) {
+      console.error('Real-time notifications connection error:', error);
+      setConnectionError(error.message);
+    }
 
-    // Join admin room
-    socketService.joinAdmin();
+
 
     // Request notification permission
     if ('Notification' in window && Notification.permission === 'default') {
@@ -42,13 +57,15 @@ const RealTimeNotifications = () => {
     document.addEventListener('click', handleClick);
 
     // Listen for new orders
+    console.log('🔔 RealTimeNotifications: Setting up new-order listener');
     socketService.onNewOrder((data) => {
+      console.log('🔔 RealTimeNotifications: New order received:', data);
       const notification = {
         id: Date.now(),
         type: 'new-order',
         title: 'New Order Received!',
-        message: `Order #${data.order.orderNumber} from Table ${data.order.tableNumber}`,
-        data: data.order,
+        message: `Order #${data.orderNumber} from Table ${data.tableNumber}`,
+        data: data,
         timestamp: new Date(),
         read: false
       };
@@ -56,7 +73,7 @@ const RealTimeNotifications = () => {
       addNotification(notification);
       playNotificationSound('notification');
       showBrowserNotification(notification.title, notification.message);
-      toast.success(`New order from Table ${data.order.tableNumber}!`);
+      toast.success(`New order from Table ${data.tableNumber}!`);
     });
 
     // Listen for order status updates
@@ -164,9 +181,19 @@ const RealTimeNotifications = () => {
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  
+  // Debug: Log component state
+  console.log('🔔 RealTimeNotifications render:', { isConnected, unreadCount, notificationsCount: notifications.length });
 
   return (
     <div className="relative">
+      {/* Professional connection status indicator */}
+      {!isConnected && (
+        <div className="absolute -top-8 right-0 text-xs text-amber-400 bg-amber-900/20 px-2 py-1 rounded border border-amber-500/30 whitespace-nowrap">
+          ⚠️ Real-time updates unavailable
+        </div>
+      )}
+      
       {/* Notification Bell */}
       <button
         onClick={() => setShowNotifications(!showNotifications)}

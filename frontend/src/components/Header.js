@@ -25,6 +25,7 @@ const NAVIGATION_ITEMS = [
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
 
   // Memoized restaurant status
@@ -37,7 +38,10 @@ const Header = () => {
       statusText: isOpen ? 'OPEN NOW' : 'CLOSED',
       statusColor: isOpen ? 'text-green-400' : 'text-red-400',
       indicatorColor: isOpen ? 'bg-green-400' : 'bg-red-400',
-      timeText: isOpen ? 'Closes at 11:00 PM' : 'Opens at 6:00 PM'
+      openTime: '6:00 PM',
+      closeTime: '11:00 PM',
+      timeText: isOpen ? 'Closes at 11:00 PM' : 'Opens at 6:00 PM',
+      displayTime: isOpen ? 'Closes at 11:00 PM' : 'Opens at 6:00 PM'
     };
   }, [currentTime]);
 
@@ -53,6 +57,17 @@ const Header = () => {
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Handle scroll effect for sticky header
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 10);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
@@ -111,9 +126,11 @@ const Header = () => {
         </div>
       </button>
 
-      <header className="bg-sangeet-neutral-900/90 backdrop-blur-md sticky top-0 z-50 border-b border-sangeet-neutral-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 relative">
+      <header className={`bg-gradient-to-r from-sangeet-neutral-950/98 to-sangeet-neutral-900/98 backdrop-blur-2xl md:fixed md:top-0 md:left-0 md:right-0 z-50 border-b border-sangeet-neutral-600/50 shadow-2xl shadow-black/50 md:transition-all md:duration-300 ${
+        isScrolled ? 'md:from-sangeet-neutral-950/99 md:to-sangeet-neutral-900/99 md:shadow-2xl' : 'md:from-sangeet-neutral-950/98 md:to-sangeet-neutral-900/98 md:shadow-xl'
+      }`}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16 relative">
             {/* Logo - Only on Desktop */}
             <Link 
               to="/" 
@@ -134,7 +151,7 @@ const Header = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8" role="navigation" aria-label="Main navigation">
+            <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8" role="navigation" aria-label="Main navigation">
               {NAVIGATION_ITEMS.map((item) => (
                 <Link
                   key={item.path}
@@ -160,23 +177,23 @@ const Header = () => {
               
               {/* Restaurant Status Indicator */}
               <div 
-                className="flex items-center space-x-4 bg-sangeet-neutral-800/50 backdrop-blur-sm rounded-full px-4 py-2 border border-sangeet-neutral-600/30"
+                className="flex items-center space-x-2 lg:space-x-4 bg-sangeet-neutral-800/50 backdrop-blur-sm rounded-full px-3 lg:px-4 py-2 border border-sangeet-neutral-600/30"
                 role="status"
                 aria-live="polite"
               >
                 <div className="flex items-center space-x-2">
                   <div 
-                    className={`w-3 h-3 rounded-full ${restaurantStatus.indicatorColor} animate-pulse shadow-sm`}
+                    className={`w-2 lg:w-3 h-2 lg:h-3 rounded-full ${restaurantStatus.indicatorColor} animate-pulse shadow-sm`}
                     aria-hidden="true"
                   />
-                  <span className={`text-sm font-semibold ${restaurantStatus.statusColor}`}>
+                  <span className={`text-xs lg:text-sm font-semibold ${restaurantStatus.statusColor}`}>
                     {restaurantStatus.statusText}
                   </span>
                 </div>
-                <div className="text-xs text-sangeet-neutral-400">
-                  {restaurantStatus.timeText}
+                <div className="hidden lg:block text-xs text-sangeet-neutral-400">
+                  {restaurantStatus.displayTime}
                 </div>
-                <div className="text-xs text-sangeet-neutral-400">
+                <div className="hidden xl:block text-xs text-sangeet-neutral-400">
                   📍 {RESTAURANT_HOURS.LOCATION}
                 </div>
               </div>
@@ -190,7 +207,7 @@ const Header = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-sangeet-neutral-800 bg-sangeet-neutral-900/95 backdrop-blur-md fixed top-16 left-0 right-0 z-40"
+              className="lg:hidden border-t border-sangeet-neutral-800 bg-sangeet-neutral-900/95 backdrop-blur-md fixed top-14 sm:top-16 left-0 right-0 z-40 md:top-16"
               role="navigation"
               aria-label="Mobile navigation"
             >
@@ -207,7 +224,7 @@ const Header = () => {
                     </span>
                   </div>
                   <div className="text-xs text-sangeet-neutral-400">
-                    {restaurantStatus.timeText}
+                    {restaurantStatus.displayTime}
                   </div>
                   <div className="text-xs text-sangeet-neutral-400">
                     📍 {RESTAURANT_HOURS.LOCATION}
@@ -236,6 +253,9 @@ const Header = () => {
           )}
         </div>
       </header>
+      
+      {/* Spacer for fixed header on desktop */}
+      <div className="hidden md:block h-16"></div>
     </>
   );
 };

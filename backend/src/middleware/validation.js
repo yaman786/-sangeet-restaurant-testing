@@ -30,7 +30,9 @@ const reviewSchema = Joi.object({
   customer_name: Joi.string().min(2).max(255).required(),
   review_text: Joi.string().min(10).max(1000).required(),
   rating: Joi.number().integer().min(1).max(5).required(),
-  image_url: Joi.string().uri().optional()
+  image_url: Joi.string().uri().optional(),
+  order_id: Joi.alternatives().try(Joi.number().integer(), Joi.string().pattern(/^\d+$/), Joi.allow(null)).optional(),
+  table_number: Joi.alternatives().try(Joi.string().max(10), Joi.allow(null)).optional()
 });
 
 // Event validation schema

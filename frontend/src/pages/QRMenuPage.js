@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchMenuItems, fetchMenuCategories, getTableByQRCode } from '../services/api';
+import { fetchMenuItems, fetchMenuCategories, getTableByQRCode, getOrdersByTable } from '../services/api';
+import socketService from '../services/socketService';
 import toast from 'react-hot-toast';
+import { clearCartData } from '../utils/cartUtils';
 
 const QRMenuPage = () => {
   const { qrCode } = useParams();
@@ -14,14 +16,51 @@ const QRMenuPage = () => {
   const [tableInfo, setTableInfo] = useState(null);
   const [cart, setCart] = useState([]);
   const [cartInitialized, setCartInitialized] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const hasRedirected = useRef(false);
+
+  // Check for active orders automatically
+  useEffect(() => {
+    const checkForActiveOrders = async () => {
+      try {
+        const tableData = await getTableByQRCode(qrCode);
+        if (tableData) {
+          const ordersResponse = await getOrdersByTable(tableData.table_number);
+          const orders = ordersResponse || [];
+          const activeOrders = orders.filter(order => 
+            order.status !== 'completed' && order.status !== 'cancelled'
+          );
+          
+          if (activeOrders.length > 0) {
+            const firstActiveOrder = activeOrders[0];
+            const redirectUrl = `/dashboard?table=${tableData.table_number}&orderId=${firstActiveOrder.id}&orderNumber=${firstActiveOrder.order_number}`;
+            toast.success(`Welcome back! Redirecting to your active order...`);
+            navigate(redirectUrl, { replace: true });
+          }
+        }
+      } catch (error) {
+        console.error('Error in automatic redirect check:', error);
+      }
+    };
+    
+    // Small delay to ensure component is fully loaded
+    const timer = setTimeout(checkForActiveOrders, 500);
+    return () => clearTimeout(timer);
+  }, [qrCode, navigate]);
 
   useEffect(() => {
+    // Prevent multiple redirects
+    if (hasRedirected.current) {
+      return;
+    }
+
     const loadData = async () => {
       try {
         setLoading(true);
 
         // Get table information from QR code
         const tableData = await getTableByQRCode(qrCode);
+        
         if (!tableData) {
           toast.error('Invalid QR code');
           navigate('/');
@@ -29,14 +68,55 @@ const QRMenuPage = () => {
         }
         setTableInfo(tableData);
 
-        // Fetch menu items
+        // Check for active orders for this table
+        try {
+          const ordersResponse = await getOrdersByTable(tableData.table_number);
+          const orders = ordersResponse.data || [];
+          
+          // Filter for active orders (not completed or cancelled)
+          const activeOrders = orders.filter(order => 
+            order.status !== 'completed' && order.status !== 'cancelled'
+          );
+          
+          if (activeOrders.length > 0) {
+            // Set redirecting state to prevent menu rendering
+            setIsRedirecting(true);
+            hasRedirected.current = true;
+            
+            // Get the first active order for customer details
+            const firstActiveOrder = activeOrders[0];
+            
+            // Store table info for tracking page
+            localStorage.setItem('currentTable', JSON.stringify(tableData));
+            
+            // Store customer information from the active order
+            localStorage.setItem(`customer_${tableData.table_number}`, JSON.stringify({
+              name: firstActiveOrder.customer_name,
+              orderId: firstActiveOrder.id,
+              orderNumber: firstActiveOrder.order_number
+            }));
+            
+            // Build redirect URL
+            const redirectUrl = `/dashboard?table=${tableData.table_number}&customerName=${encodeURIComponent(firstActiveOrder.customer_name)}&orderId=${firstActiveOrder.id}&orderNumber=${firstActiveOrder.order_number}`;
+            
+            // Show toast and redirect immediately
+            toast.success('You have an active order! Redirecting to tracking page...');
+            
+            // Redirect immediately
+            navigate(redirectUrl, { replace: true });
+            
+            return; // Exit early - don't load menu data
+          }
+        } catch (error) {
+          console.error('Error checking orders:', error);
+          // Continue to menu page if there's an error checking orders
+        }
+
+        // Only load menu data if no active orders found
         const menuData = await fetchMenuItems();
-        console.log('Menu items data:', menuData);
         setMenuItems(menuData);
 
-        // Fetch categories
         const categoriesData = await fetchMenuCategories();
-        console.log('Categories data:', categoriesData);
         setCategories(categoriesData);
 
       } catch (error) {
@@ -48,106 +128,103 @@ const QRMenuPage = () => {
     };
 
     loadData();
-  }, [qrCode, navigate]);
+  }, []); // Temporarily remove dependencies to test
 
   // Load cart from localStorage on component mount
   useEffect(() => {
-    console.log('=== CART LOAD DEBUG ===');
-    console.log('Loading cart for QR code:', qrCode);
-    console.log('localStorage key:', `cart_${qrCode}`);
-
     const savedCart = localStorage.getItem(`cart_${qrCode}`);
-    console.log('Saved cart data from localStorage:', savedCart);
 
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart);
-        console.log('✅ Parsed cart data:', parsedCart);
         
         if (Array.isArray(parsedCart) && parsedCart.length > 0) {
           setCart(parsedCart);
-          console.log('✅ Cart loaded successfully');
         } else {
-          console.log('⚠️ Cart data is empty or invalid structure');
           setCart([]);
         }
       } catch (error) {
-        console.error('❌ Error parsing cart data:', error);
-        console.log('Raw saved cart data:', savedCart);
+        console.error('Error parsing cart data:', error);
         setCart([]);
       }
     } else {
-      console.log('❌ No saved cart found in localStorage');
       setCart([]);
-      
-      // Check all localStorage keys for debugging
-      console.log('All localStorage keys:');
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        console.log(`Key: ${key}, Value: ${localStorage.getItem(key)}`);
-      }
     }
     
-    // Mark cart as initialized
     setCartInitialized(true);
   }, [qrCode]);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    // Only run after cart has been initialized
     if (!cartInitialized) {
-      console.log('⏳ Cart not yet initialized, skipping save');
       return;
     }
-
-    console.log('=== CART SAVE DEBUG ===');
-    console.log('Cart changed, saving to localStorage:', cart);
-    console.log('QR Code for localStorage key:', qrCode);
-    console.log('localStorage key will be:', `cart_${qrCode}`);
 
     if (cart.length > 0) {
       try {
         const cartData = JSON.stringify(cart);
         localStorage.setItem(`cart_${qrCode}`, cartData);
-        console.log('✅ Saved cart to localStorage:', cartData);
-
-        // Verify the save worked
-        const savedData = localStorage.getItem(`cart_${qrCode}`);
-        console.log('✅ Verification - Retrieved from localStorage:', savedData);
       } catch (error) {
-        console.error('❌ Error saving cart to localStorage:', error);
+        console.error('Error saving cart to localStorage:', error);
       }
     } else {
-      // Only remove if there was previously saved cart data
       const existingCart = localStorage.getItem(`cart_${qrCode}`);
       if (existingCart) {
         try {
           localStorage.removeItem(`cart_${qrCode}`);
-          console.log('🗑️ Removed cart from localStorage');
         } catch (error) {
-          console.error('❌ Error removing cart from localStorage:', error);
+          console.error('Error removing cart from localStorage:', error);
         }
-      } else {
-        console.log('ℹ️ No existing cart to remove');
       }
     }
   }, [cart, qrCode, cartInitialized]);
 
+  // Socket connection and order deletion listener
+  useEffect(() => {
+    // Connect to socket service
+    socketService.connect();
+    
+    // Join table room for order notifications
+    if (tableInfo?.table_number) {
+      socketService.joinTable(tableInfo.table_number);
+    }
+
+    // Listen for order deletion events
+    const handleOrderDeleted = (data) => {
+      console.log('🗑️ Order deleted event received:', data);
+      
+      // Check if this deletion affects our table
+      if (data.tableNumber && tableInfo?.table_number && 
+          data.tableNumber.toString() === tableInfo.table_number.toString()) {
+        
+        console.log('🗑️ Clearing cart for deleted order on table', tableInfo.table_number);
+        
+        // Clear cart state
+        setCart([]);
+        
+        // Use the cart utility function for comprehensive clearing
+        const success = clearCartData(qrCode, tableInfo.table_number);
+        
+        if (success) {
+          console.log('✅ Cart data cleared successfully');
+          toast.success('Previous order has been cancelled. Your cart has been cleared.');
+        } else {
+          console.error('❌ Failed to clear cart data');
+        }
+      }
+    };
+
+    socketService.onOrderDeleted(handleOrderDeleted);
+
+    // Cleanup function
+    return () => {
+      socketService.removeListener('order-deleted');
+    };
+  }, [tableInfo, qrCode]);
+
   const addToCart = (item) => {
-    console.log('=== ADD TO CART DEBUG ===');
-    console.log('Adding item to cart:', item);
-    console.log('Current cart before adding:', cart);
-    console.log('QR Code:', qrCode);
-    console.log('localStorage key:', `cart_${qrCode}`);
-    
-    // Check current localStorage state
-    const currentSavedCart = localStorage.getItem(`cart_${qrCode}`);
-    console.log('Current saved cart in localStorage:', currentSavedCart);
-    
     setCart(prevCart => {
-      console.log('Previous cart state:', prevCart);
       const existingItem = prevCart.find(cartItem => cartItem.menu_item_id === item.id);
-      console.log('Existing item found:', existingItem);
       
       let newCart;
       if (existingItem) {
@@ -156,7 +233,6 @@ const QRMenuPage = () => {
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
             : cartItem
         );
-        console.log('Updated cart (existing item):', newCart);
       } else {
         newCart = [...prevCart, { 
           menu_item_id: item.id, 
@@ -165,20 +241,14 @@ const QRMenuPage = () => {
           price: item.price,
           special_requests: ''
         }];
-        console.log('Updated cart (new item):', newCart);
       }
       
-      // Immediately save to localStorage for debugging
+      // Immediately save to localStorage
       try {
         const cartData = JSON.stringify(newCart);
         localStorage.setItem(`cart_${qrCode}`, cartData);
-        console.log('✅ Immediately saved to localStorage:', cartData);
-        
-        // Verify the save worked
-        const savedData = localStorage.getItem(`cart_${qrCode}`);
-        console.log('✅ Verification - Retrieved from localStorage:', savedData);
       } catch (error) {
-        console.error('❌ Error saving cart immediately:', error);
+        console.error('Error saving cart immediately:', error);
       }
       
       return newCart;
@@ -212,8 +282,8 @@ const QRMenuPage = () => {
 
   return (
     <div className="min-h-screen bg-sangeet-neutral-950">
-      {/* Professional Header */}
-      <div className="bg-gradient-to-r from-sangeet-neutral-900 to-sangeet-neutral-800 border-b border-sangeet-neutral-700 p-4 sticky top-0 z-50">
+      {/* Professional Header - Fixed Sticky Navigation */}
+      <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-sangeet-neutral-900 to-sangeet-neutral-800 border-b border-sangeet-neutral-700 p-4 z-50 shadow-lg">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -247,9 +317,11 @@ const QRMenuPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-4xl mx-auto p-4">
+      {/* Main Content with Top Padding for Fixed Header */}
+      <div className="max-w-4xl mx-auto p-4 pt-24">
+        
         {/* Category Filter - Enhanced */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-sangeet-400 mb-3 flex items-center">

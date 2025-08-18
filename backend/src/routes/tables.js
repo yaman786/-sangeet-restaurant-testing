@@ -30,8 +30,8 @@ router.get('/qr/:qrCode', async (req, res, next) => {
     const { qrCode } = req.params;
     
     const result = await pool.query(
-      'SELECT * FROM tables WHERE qr_code = $1 AND is_active = true',
-      [qrCode]
+      'SELECT * FROM tables WHERE qr_code_url LIKE $1 AND is_active = true',
+      [`%${qrCode}%`]
     );
     const rows = result.rows;
     
@@ -51,11 +51,11 @@ router.get('/qr/:qrCode', async (req, res, next) => {
  */
 router.post('/', authenticateToken, requireAdmin, validateTableData, async (req, res, next) => {
   try {
-    const { table_number, capacity, qr_code, location } = req.body;
+    const { table_number, capacity, qr_code_url, location } = req.body;
     
     const result = await pool.query(
-      'INSERT INTO tables (table_number, capacity, qr_code, location) VALUES ($1, $2, $3, $4) RETURNING *',
-      [table_number, capacity, qr_code, location]
+      'INSERT INTO tables (table_number, capacity, qr_code_url, location) VALUES ($1, $2, $3, $4) RETURNING *',
+      [table_number, capacity, qr_code_url, location]
     );
     
     const newTable = result.rows[0];
@@ -73,11 +73,11 @@ router.post('/', authenticateToken, requireAdmin, validateTableData, async (req,
 router.put('/:id', authenticateToken, requireAdmin, validateTableData, async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { table_number, capacity, qr_code, location } = req.body;
+    const { table_number, capacity, qr_code_url, location } = req.body;
     
     const result = await pool.query(
-      'UPDATE tables SET table_number = $1, capacity = $2, qr_code = $3, location = $4 WHERE id = $5 RETURNING *',
-      [table_number, capacity, qr_code, location, id]
+      'UPDATE tables SET table_number = $1, capacity = $2, qr_code_url = $3, location = $4 WHERE id = $5 RETURNING *',
+      [table_number, capacity, qr_code_url, location, id]
     );
     
     if (result.rows.length === 0) {

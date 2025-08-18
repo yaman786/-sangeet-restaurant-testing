@@ -1,5 +1,0 @@
-VERCEL DEPLOYMENT FORCE - v3.0
-Timestamp: 2025-01-09 19:05:00
-Issue: Vercel serving cached HTML with CDN Tailwind
-Solution: Force new deployment
-Status: Menu page blank due to CDN/compiled CSS conflict

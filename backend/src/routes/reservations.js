@@ -15,7 +15,6 @@ router.get('/stats', authenticateToken, requireAuth, reservationController.getRe
 router.get('/:id', authenticateToken, requireAuth, reservationController.getReservationById);
 router.put('/:id', authenticateToken, requireAuth, reservationController.updateReservation);
 router.patch('/:id/status', authenticateToken, requireAuth, reservationController.updateReservationStatus);
-
 router.delete('/:id', authenticateToken, requireAuth, reservationController.deleteReservation);
 
 module.exports = router; 

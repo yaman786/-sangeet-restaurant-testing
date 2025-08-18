@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createOrder, getTableByQRCode } from '../services/api';
+import socketService from '../services/socketService';
 import toast from 'react-hot-toast';
+import { clearCartData } from '../utils/cartUtils';
 
 const QRCartPage = () => {
   const { qrCode } = useParams();
@@ -33,41 +35,26 @@ const QRCartPage = () => {
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Load cart from localStorage
-        console.log('=== CART LOAD DEBUG ===');
-        console.log('Loading cart for QR code:', qrCode);
-        console.log('localStorage key:', `cart_${qrCode}`);
+        
         
         const savedCart = localStorage.getItem(`cart_${qrCode}`);
-        console.log('Saved cart data from localStorage:', savedCart);
+
         
         if (savedCart) {
           try {
             const parsedCart = JSON.parse(savedCart);
-            console.log('✅ Parsed cart data:', parsedCart);
-            
             // Validate cart data structure
             if (Array.isArray(parsedCart) && parsedCart.length > 0) {
               setCart(parsedCart);
-              console.log('✅ Cart loaded successfully');
             } else {
-              console.log('⚠️ Cart data is empty or invalid structure');
               setCart([]);
             }
           } catch (error) {
             console.error('❌ Error parsing cart data:', error);
-            console.log('Raw saved cart data:', savedCart);
             setCart([]);
           }
         } else {
-          console.log('❌ No saved cart found in localStorage');
           setCart([]);
-          
-          // Check all localStorage keys for debugging
-          console.log('All localStorage keys:');
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            console.log(`Key: ${key}, Value: ${localStorage.getItem(key)}`);
-          }
         }
 
         // Mark cart as initialized
@@ -101,24 +88,17 @@ const QRCartPage = () => {
   useEffect(() => {
     // Only run after cart has been initialized
     if (!cartInitialized) {
-      console.log('⏳ Cart not yet initialized, skipping save');
       return;
     }
-
-    console.log('=== CART STATE CHANGED ===');
-    console.log('Cart state updated:', cart);
-    console.log('Cart length:', cart.length);
     
     // Only save/remove if cart has been loaded (not initial empty state)
     if (cart.length > 0) {
       localStorage.setItem(`cart_${qrCode}`, JSON.stringify(cart));
-      console.log('✅ Cart saved to localStorage');
     } else {
       // Only remove if there was previously saved cart data
       const savedCart = localStorage.getItem(`cart_${qrCode}`);
       if (savedCart) {
         localStorage.removeItem(`cart_${qrCode}`);
-        console.log('🗑️ Cart removed from localStorage');
       }
     }
   }, [cart, qrCode, cartInitialized]);
@@ -132,6 +112,52 @@ const QRCartPage = () => {
       localStorage.setItem(`instructions_${qrCode}`, specialInstructions);
     }
   }, [customerName, specialInstructions, qrCode]);
+
+  // Socket connection and order deletion listener
+  useEffect(() => {
+    // Connect to socket service
+    socketService.connect();
+    
+    // Join table room for order notifications
+    if (tableInfo?.table_number) {
+      socketService.joinTable(tableInfo.table_number);
+    }
+
+    // Listen for order deletion events
+    const handleOrderDeleted = (data) => {
+      
+      
+      // Check if this deletion affects our table
+      if (data.tableNumber && tableInfo?.table_number && 
+          data.tableNumber.toString() === tableInfo.table_number.toString()) {
+        
+        
+        
+        // Clear cart state
+        setCart([]);
+        
+        // Use the cart utility function for comprehensive clearing
+        const success = clearCartData(qrCode, tableInfo.table_number);
+        
+        if (success) {
+
+          toast.success('Previous order has been cancelled. Your cart has been cleared.');
+          
+          // Redirect back to menu
+          navigate(`/qr/${qrCode}`);
+        } else {
+          console.error('❌ Failed to clear cart data');
+        }
+      }
+    };
+
+    socketService.onOrderDeleted(handleOrderDeleted);
+
+    // Cleanup function
+    return () => {
+      socketService.removeListener('order-deleted');
+    };
+  }, [tableInfo, qrCode, navigate]);
 
   const updateQuantity = (itemId, quantity) => {
     if (quantity <= 0) {
@@ -185,7 +211,19 @@ const QRCartPage = () => {
       console.log('Cart data:', cart);
       console.log('Table info:', tableInfo);
 
-      await createOrder(orderData);
+      const orderResponse = await createOrder(orderData);
+      console.log('✅ Order response received:', orderResponse);
+      console.log('📋 Full order response structure:', JSON.stringify(orderResponse, null, 2));
+      
+      const orderId = orderResponse?.order?.id;
+      const orderNumber = orderResponse?.order?.order_number;
+      
+      console.log('📋 Extracted order details:', { orderId, orderNumber });
+      
+      if (!orderId) {
+        console.error('❌ No order ID found in response');
+        throw new Error('Order ID not found in response');
+      }
       
       // Clear cart and customer info after successful order
       setCart([]);
@@ -197,8 +235,10 @@ const QRCartPage = () => {
       
       toast.success('Order placed successfully!');
       
-      // Navigate back to menu
-      navigate(`/qr/${qrCode}`);
+      // Navigate to unified dashboard page
+      const dashboardUrl = `/dashboard?orderId=${orderId}&table=${tableInfo?.table_number}&customerName=${encodeURIComponent(customerName)}&orderNumber=${orderNumber || ''}&totalAmount=${getTotalAmount().toFixed(2)}`;
+      console.log('🚀 Navigating to:', dashboardUrl);
+      window.location.href = dashboardUrl;
       
     } catch (error) {
       console.error('Error placing order:', error);

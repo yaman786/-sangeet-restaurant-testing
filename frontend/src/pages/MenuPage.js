@@ -23,21 +23,20 @@ const MenuPage = () => {
     const loadMenuData = async () => {
       try {
         setLoading(true);
-        console.log('🔄 Loading menu data...');
+    
         
         const [menuData, categoriesData] = await Promise.all([
           fetchMenuItems(filters),
           fetchMenuCategories()
         ]);
         
-        console.log('📊 Menu data received:', menuData);
-        console.log('📂 Categories data received:', categoriesData);
+        
         
         setMenuItems(Array.isArray(menuData) ? menuData : []);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       } catch (error) {
         console.error('Error loading menu data:', error);
-        console.log('Using fallback menu data - API may not be available');
+        
         
         // Fallback categories
         setCategories([

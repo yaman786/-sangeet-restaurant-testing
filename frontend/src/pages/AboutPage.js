@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * AboutPage Component - Streamlined Essential Sections
  * Features: Hero video, simplified story, gallery with filters, team, and CTA
  */
 const AboutPage = () => {
+  const navigate = useNavigate();
   // Gallery filter state
   const [activeFilter, setActiveFilter] = useState('all');
 
@@ -674,6 +676,7 @@ const AboutPage = () => {
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               {/* Primary CTA - Book Table */}
               <motion.button
+                onClick={() => navigate('/reservations')}
                 whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.95 }}
                 className="inline-flex items-center space-x-3 bg-gradient-to-r from-sangeet-400 to-sangeet-500 text-sangeet-neutral-950 px-10 py-4 rounded-2xl font-bold text-xl hover:from-sangeet-300 hover:to-sangeet-400 transition-all duration-300 shadow-2xl hover:shadow-sangeet-400/30"
@@ -690,6 +693,7 @@ const AboutPage = () => {
               
               {/* Secondary CTA - View Menu */}
               <motion.button
+                onClick={() => navigate('/menu')}
                 whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.95 }}
                 className="inline-flex items-center space-x-3 border-2 border-sangeet-red-500 text-sangeet-red-400 px-10 py-4 rounded-2xl font-bold text-xl hover:bg-sangeet-red-500 hover:text-white transition-all duration-300 shadow-2xl hover:shadow-sangeet-red-500/30"

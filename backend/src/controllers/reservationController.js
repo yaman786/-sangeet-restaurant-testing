@@ -158,20 +158,15 @@ const createReservation = async (req, res) => {
       }
     }
 
-    // Generate confirmation code
-    const confirmationCodeQuery = `SELECT generate_confirmation_code()`;
-    const confirmationResult = await pool.query(confirmationCodeQuery);
-    const confirmationCode = confirmationResult.rows[0].generate_confirmation_code;
-
     // Create reservation
     const query = `
-      INSERT INTO reservations (customer_name, email, phone, table_id, date, time, guests, special_requests, status, confirmation_code)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', $9)
+      INSERT INTO reservations (customer_name, email, phone, table_id, date, time, guests, special_requests, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')
       RETURNING *
     `;
     
     const result = await pool.query(query, [
-      customer_name, email, phone, finalTableId, date, time, guests, special_requests, confirmationCode
+      customer_name, email, phone, finalTableId, date, time, guests, special_requests
     ]);
 
     const newReservation = result.rows[0];
@@ -186,8 +181,7 @@ const createReservation = async (req, res) => {
 
     res.status(201).json({
       message: 'Reservation created successfully',
-      reservation: newReservation,
-      confirmation_code: confirmationCode
+      reservation: newReservation
     });
   } catch (error) {
     console.error('Error creating reservation:', error);
@@ -384,6 +378,8 @@ const getReservationStats = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch reservation statistics' });
   }
 };
+
+
 
 module.exports = {
   getAllReservations,

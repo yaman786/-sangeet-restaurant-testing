@@ -6,6 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Services
+import socketService from './services/socketService';
+import { clearAllCartData } from './utils/cartUtils';
+import toast from 'react-hot-toast';
 
 // Pages - Lazy loaded for better performance
 import HomePage from './pages/HomePage';
@@ -26,6 +32,12 @@ import StaffManagementPage from './pages/StaffManagementPage';
 import RestaurantWebsiteManagementPage from './pages/RestaurantWebsiteManagementPage';
 import AnalyticsReportsPage from './pages/AnalyticsReportsPage';
 import LoginPage from './pages/LoginPage';
+import ReviewSubmissionPage from './pages/ReviewSubmissionPage';
+import OrderSuccessPage from './pages/OrderSuccessPage';
+import OrderTrackingPage from './pages/OrderTrackingPage';
+import UnifiedOrderPage from './pages/UnifiedOrderPage';
+import UnifiedDashboardPage from './pages/UnifiedDashboardPage';
+
 import NotFoundPage from './pages/NotFoundPage';
 
 // Services
@@ -102,7 +114,8 @@ function App() {
     isQRRoute: location.pathname.startsWith('/qr/'),
     isAdminRoute: location.pathname.startsWith('/admin/'),
     isKitchenRoute: location.pathname.startsWith('/kitchen/'),
-    isLoginRoute: location.pathname === '/login'
+    isLoginRoute: location.pathname === '/login',
+    isStandaloneRoute: location.pathname === '/order' || location.pathname === '/dashboard'
   }), [location.pathname]);
 
   // Memoized data loading function
@@ -199,6 +212,40 @@ function App() {
     loadData();
   }, [loadData]);
 
+  // Global order deletion listener - clears cart data when order is deleted
+  useEffect(() => {
+    // Connect to socket service
+    
+    socketService.connect();
+    
+    // Check socket connection status
+    setTimeout(() => {
+      
+    }, 1000);
+
+    // Listen for order deletion events globally
+    const handleOrderDeleted = (data) => {
+      
+      
+      // Clear all cart data when any order is deleted
+      const success = clearAllCartData();
+      
+      if (success) {
+        
+        toast.success('Order has been cancelled. Your cart has been cleared.');
+      } else {
+        
+      }
+    };
+
+    socketService.onOrderDeleted(handleOrderDeleted);
+
+    // Cleanup function
+    return () => {
+      socketService.removeListener('order-deleted');
+    };
+  }, []);
+
   // Show loading state
   if (loading) {
     return <LoadingSpinner />;
@@ -244,6 +291,14 @@ function App() {
                 </AnimatedRoute>
               }
             />
+            <Route
+              path="/order-success"
+              element={
+                <AnimatedRoute>
+                  <OrderSuccessPage />
+                </AnimatedRoute>
+              }
+            />
           </Routes>
         </AnimatePresence>
       </div>
@@ -270,9 +325,36 @@ function App() {
               element={
                 <ErrorBoundary>
                   <AnimatedRoute>
-                    <KitchenDisplayPage />
+                    <ProtectedRoute requiredRole="kitchen">
+                      <KitchenDisplayPage />
+                    </ProtectedRoute>
                   </AnimatedRoute>
                 </ErrorBoundary>
+              }
+            />
+          </Routes>
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // Standalone Pages Experience (No Header/Footer)
+  if (routeConfig.isStandaloneRoute) {
+    return (
+      <div className={CONTAINER_CLASSES}>
+        <ScrollToTop />
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route
+              path="/order"
+              element={
+                <UnifiedOrderPage />
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <UnifiedDashboardPage />
               }
             />
           </Routes>
@@ -321,16 +403,23 @@ function App() {
               path="/admin/dashboard"
               element={
                 <AnimatedRoute>
-                  <AdminDashboard />
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
                 </AnimatedRoute>
               }
             />
             <Route
               path="/admin/orders"
               element={
-                <AnimatedRoute>
-                  <AdminOrdersPage />
-                </AnimatedRoute>
+                <ErrorBoundary>
+                  <AnimatedRoute>
+                    {(() => {
+              
+                      return <AdminOrdersPage />;
+                    })()}
+                  </AnimatedRoute>
+                </ErrorBoundary>
               }
             />
             <Route
@@ -389,6 +478,16 @@ function App() {
                 </ErrorBoundary>
               }
             />
+            <Route
+              path="/admin/kitchen"
+              element={
+                <ErrorBoundary>
+                  <AnimatedRoute>
+                    <KitchenDisplayPage />
+                  </AnimatedRoute>
+                </ErrorBoundary>
+              }
+            />
           </Routes>
         </AnimatePresence>
       </div>
@@ -432,6 +531,14 @@ function App() {
             } 
           />
           <Route 
+            path="/kitchen" 
+            element={
+              <AnimatedRoute>
+                <KitchenDisplayPage />
+              </AnimatedRoute>
+            } 
+          />
+          <Route 
             path="/qr-codes" 
             element={
               <AnimatedRoute>
@@ -463,6 +570,31 @@ function App() {
               </AnimatedRoute>
             } 
           />
+          <Route 
+            path="/review" 
+            element={
+              <AnimatedRoute>
+                <ReviewSubmissionPage />
+              </AnimatedRoute>
+            } 
+          />
+          <Route 
+            path="/order-success" 
+            element={
+              <AnimatedRoute>
+                <OrderSuccessPage />
+              </AnimatedRoute>
+            } 
+          />
+          <Route 
+            path="/track-order" 
+            element={
+              <AnimatedRoute>
+                <OrderTrackingPage />
+              </AnimatedRoute>
+            } 
+          />
+
           <Route 
             path="/login" 
             element={

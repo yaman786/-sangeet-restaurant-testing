@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS customer_reviews (
     review_text TEXT NOT NULL,
     rating INTEGER CHECK (rating >= 1 AND rating <= 5),
     image_url TEXT,
+    order_id INTEGER,
+    table_number VARCHAR(10),
     is_verified BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

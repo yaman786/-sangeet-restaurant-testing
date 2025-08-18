@@ -99,11 +99,11 @@ const AdminDashboard = () => {
               <div className="w-12 h-12 bg-sangeet-400/20 rounded-lg flex items-center justify-center group-hover:bg-sangeet-400/30 transition-colors">
                 <span className="text-2xl">📋</span>
               </div>
-              <span className="text-sangeet-neutral-500 text-sm">Orders</span>
+              <span className="text-sangeet-neutral-500 text-sm">Admin</span>
             </div>
             <h3 className="text-xl font-bold text-sangeet-neutral-100 mb-2">Order Management</h3>
             <p className="text-sangeet-neutral-400 text-sm mb-4">
-              Administrative order management, customer information, and business analytics
+              Administrative control: view all orders, analytics, customer data, and business reports
             </p>
             <Link
               to="/admin/orders"
@@ -124,7 +124,7 @@ const AdminDashboard = () => {
             </div>
             <h3 className="text-xl font-bold text-sangeet-neutral-100 mb-2">Kitchen Display</h3>
             <p className="text-sangeet-neutral-400 text-sm mb-4">
-              Access kitchen display system
+              Real-time kitchen operations: live order queue, touch-friendly interface for staff
             </p>
             <Link
               to="/kitchen/display"

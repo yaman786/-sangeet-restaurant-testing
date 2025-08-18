@@ -3,18 +3,31 @@ import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import OrderQueue from '../components/OrderQueue';
+import CustomDropdown from '../components/CustomDropdown';
 import { logout } from '../utils/auth';
+import { isNewItem, getTimeSinceAdded, sortItemsByNewness } from '../utils/itemUtils';
 
 const KitchenDisplayPage = () => {
   const [orderStats, setOrderStats] = useState({
     total: 0,
     pending: 0,
-    confirmed: 0,
     preparing: 0,
     ready: 0,
     completed: 0
   });
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'pending', 'preparing', 'ready', 'completed'
+  const [sortBy, setSortBy] = useState('priority'); // 'priority', 'time', 'table', 'customer', 'amount'
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  const sortOptions = [
+    { value: 'priority', label: 'Priority (Pending → Ready)' },
+    { value: 'time', label: 'Time (Newest First)' },
+    { value: 'time-oldest', label: 'Time (Oldest First)' },
+    { value: 'table', label: 'Table Number' },
+    { value: 'customer', label: 'Customer Name' },
+    { value: 'amount', label: 'Amount (High to Low)' },
+    { value: 'amount-low', label: 'Amount (Low to High)' }
+  ];
   // eslint-disable-next-line no-unused-vars
   const [connectionStatus, setConnectionStatus] = useState('connected');
   const [kitchenUser, setKitchenUser] = useState(null);
@@ -119,6 +132,12 @@ const KitchenDisplayPage = () => {
 
             {/* Controls */}
             <div className="flex items-center space-x-3">
+              {/* Live Updates Indicator */}
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-green-400 font-medium">Live Updates</span>
+              </div>
+              
               {/* Connection Status */}
               <div className="flex items-center space-x-1">
                 <div className={`w-2 h-2 rounded-full ${
@@ -163,67 +182,134 @@ const KitchenDisplayPage = () => {
       </header>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Compact Stats Row - Kitchen Focused */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
-          <motion.div
+        {/* Interactive Filter Cards - Kitchen Focused */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+          <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-sangeet-neutral-900 rounded-lg p-3 border border-sangeet-neutral-700"
+            onClick={() => setActiveFilter('all')}
+            className={`rounded-lg p-3 border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-xl ${
+              activeFilter === 'all'
+                ? 'bg-sangeet-400/20 border-sangeet-400/50 shadow-lg'
+                : 'bg-sangeet-neutral-900 border-sangeet-neutral-700 hover:bg-sangeet-neutral-800 hover:border-sangeet-neutral-600'
+            }`}
           >
-            <h3 className="text-xs font-medium text-sangeet-neutral-400">Total</h3>
-            <p className="text-xl font-bold text-sangeet-neutral-100">{orderStats.total}</p>
-          </motion.div>
+            <h3 className={`text-xs font-medium ${
+              activeFilter === 'all' ? 'text-sangeet-400' : 'text-sangeet-neutral-400'
+            }`}>All Orders</h3>
+            <p className={`text-xl font-bold ${
+              activeFilter === 'all' ? 'text-sangeet-400' : 'text-sangeet-neutral-100'
+            }`}>{orderStats.total}</p>
+          </motion.button>
           
-          <motion.div
+          <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-yellow-900/20 border-yellow-500/30 rounded-lg p-3 border"
+            onClick={() => setActiveFilter('pending')}
+            className={`rounded-lg p-3 border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-xl ${
+              activeFilter === 'pending'
+                ? 'bg-yellow-400/20 border-yellow-400/50 shadow-lg'
+                : 'bg-yellow-900/20 border-yellow-500/30 hover:bg-yellow-900/30 hover:border-yellow-400/50'
+            }`}
           >
-            <h3 className="text-xs font-medium text-yellow-400">Pending</h3>
-            <p className="text-xl font-bold text-yellow-400">{orderStats.pending}</p>
-          </motion.div>
+            <h3 className={`text-xs font-medium ${
+              activeFilter === 'pending' ? 'text-yellow-300' : 'text-yellow-400'
+            }`}>Pending</h3>
+            <p className={`text-xl font-bold ${
+              activeFilter === 'pending' ? 'text-yellow-300' : 'text-yellow-400'
+            }`}>{orderStats.pending}</p>
+          </motion.button>
           
-          <motion.div
+          <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-blue-900/20 border-blue-500/30 rounded-lg p-3 border"
+            onClick={() => setActiveFilter('preparing')}
+            className={`rounded-lg p-3 border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-xl ${
+              activeFilter === 'preparing'
+                ? 'bg-orange-400/20 border-orange-400/50 shadow-lg'
+                : 'bg-orange-900/20 border-orange-500/30 hover:bg-orange-900/30 hover:border-orange-400/50'
+            }`}
           >
-            <h3 className="text-xs font-medium text-blue-400">Confirmed</h3>
-            <p className="text-xl font-bold text-blue-400">{orderStats.confirmed}</p>
-          </motion.div>
+            <h3 className={`text-xs font-medium ${
+              activeFilter === 'preparing' ? 'text-orange-300' : 'text-orange-400'
+            }`}>Preparing</h3>
+            <p className={`text-xl font-bold ${
+              activeFilter === 'preparing' ? 'text-orange-300' : 'text-orange-400'
+            }`}>{orderStats.preparing}</p>
+          </motion.button>
           
-          <motion.div
+          <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-orange-900/20 border-orange-500/30 rounded-lg p-3 border"
+            onClick={() => setActiveFilter('ready')}
+            className={`rounded-lg p-3 border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-xl ${
+              activeFilter === 'ready'
+                ? 'bg-green-400/20 border-green-400/50 shadow-lg'
+                : 'bg-green-900/20 border-green-500/30 hover:bg-green-900/30 hover:border-green-400/50'
+            }`}
           >
-            <h3 className="text-xs font-medium text-orange-400">Preparing</h3>
-            <p className="text-xl font-bold text-orange-400">{orderStats.preparing}</p>
-          </motion.div>
+            <h3 className={`text-xs font-medium ${
+              activeFilter === 'ready' ? 'text-green-300' : 'text-green-400'
+            }`}>Ready</h3>
+            <p className={`text-xl font-bold ${
+              activeFilter === 'ready' ? 'text-green-300' : 'text-green-400'
+            }`}>{orderStats.ready}</p>
+          </motion.button>
           
-          <motion.div
+          <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-green-900/20 border-green-500/30 rounded-lg p-3 border"
+            onClick={() => setActiveFilter('completed')}
+            className={`rounded-lg p-3 border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-xl ${
+              activeFilter === 'completed'
+                ? 'bg-gray-400/20 border-gray-400/50 shadow-lg'
+                : 'bg-gray-900/20 border-gray-500/30 hover:bg-gray-900/30 hover:border-gray-400/50'
+            }`}
           >
-            <h3 className="text-xs font-medium text-green-400">Ready</h3>
-            <p className="text-xl font-bold text-green-400">{orderStats.ready}</p>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-gray-900/20 border-gray-500/30 rounded-lg p-3 border"
-          >
-            <h3 className="text-xs font-medium text-gray-400">Completed</h3>
-            <p className="text-xl font-bold text-gray-400">{orderStats.completed}</p>
-          </motion.div>
+            <h3 className={`text-xs font-medium ${
+              activeFilter === 'completed' ? 'text-gray-300' : 'text-gray-400'
+            }`}>Completed</h3>
+            <p className={`text-xl font-bold ${
+              activeFilter === 'completed' ? 'text-gray-300' : 'text-gray-400'
+            }`}>{orderStats.completed}</p>
+          </motion.button>
         </div>
+
+        {/* Sort Options - Only show when "All Orders" is selected */}
+        {activeFilter === 'all' && (
+          <div className="mb-4 bg-sangeet-neutral-900 border-2 border-sangeet-neutral-600 rounded-xl p-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sangeet-400 text-lg">📊</span>
+                  <span className="text-sm font-bold text-sangeet-neutral-100">Sort Orders</span>
+                </div>
+                <CustomDropdown
+                  value={sortBy}
+                  onChange={setSortBy}
+                  options={sortOptions}
+                  className="min-w-[280px]"
+                />
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-sangeet-400 rounded-full animate-pulse shadow-lg"></div>
+                <span className="text-xs text-sangeet-neutral-300 font-semibold bg-sangeet-neutral-800 px-3 py-1 rounded-full">
+                  {sortBy === 'priority' && '🔄 Priority workflow'}
+                  {sortBy === 'time' && '⏰ Latest orders first'}
+                  {sortBy === 'time-oldest' && '⏰ First-come-first-served'}
+                  {sortBy === 'table' && '🪑 Table grouping'}
+                  {sortBy === 'customer' && '👤 Alphabetical order'}
+                  {sortBy === 'amount' && '💰 Premium orders first'}
+                  {sortBy === 'amount-low' && '💰 Quick orders first'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Order Queue - Kitchen Optimized */}
         <div className="bg-sangeet-neutral-900 rounded-lg border border-sangeet-neutral-700">
@@ -231,6 +317,8 @@ const KitchenDisplayPage = () => {
             onStatsUpdate={handleStatsUpdate}
             soundEnabled={soundEnabled}
             kitchenMode={true}
+            activeFilter={activeFilter}
+            sortBy={sortBy}
           />
         </div>
       </div>

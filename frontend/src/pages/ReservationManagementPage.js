@@ -15,6 +15,7 @@ const ReservationManagementPage = () => {
     completed: 0,
     cancelled: 0
   });
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'pending', 'confirmed', 'completed', 'cancelled'
   const [filters, setFilters] = useState({
     status: '',
     date: '',
@@ -156,16 +157,19 @@ const ReservationManagementPage = () => {
     return table ? table.table_number : 'Not assigned';
   };
 
-  // Filter reservations
+  // Filter reservations based on activeFilter
   const filteredReservations = reservations.filter(reservation => {
-    if (filters.status && reservation.status !== filters.status) return false;
+    // Apply activeFilter first
+    if (activeFilter !== 'all' && reservation.status !== activeFilter) return false;
+    
+    // Apply other filters if needed
     if (filters.date && reservation.date !== filters.date) return false;
     if (filters.table_id && reservation.table_id !== parseInt(filters.table_id)) return false;
     if (filters.guests && reservation.guests < parseInt(filters.guests)) return false;
     return true;
   });
 
-  // Include completed and cancelled reservations in main workflow (but treat them like completed)
+  // Include all filtered reservations in main workflow
   const activeReservations = filteredReservations;
 
   // Calculate real-time stats from reservations data
@@ -188,101 +192,156 @@ const ReservationManagementPage = () => {
       <AdminHeader />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Restaurant Stats Cards */}
+        {/* Interactive Filter Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <motion.div
+          <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-sangeet-neutral-900 rounded-xl p-6 border border-sangeet-neutral-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            onClick={() => setActiveFilter('all')}
+            className={`rounded-xl p-6 border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-xl ${
+              activeFilter === 'all'
+                ? 'bg-sangeet-400/20 border-sangeet-400/50 shadow-lg'
+                : 'bg-sangeet-neutral-900 border-sangeet-neutral-700 hover:bg-sangeet-neutral-800 hover:border-sangeet-neutral-600'
+            }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sangeet-neutral-400 text-sm font-medium">Total</p>
-                <p className="text-3xl font-bold text-sangeet-neutral-100">
+                <p className={`text-sm font-medium ${
+                  activeFilter === 'all' ? 'text-sangeet-400' : 'text-sangeet-neutral-400'
+                }`}>All Reservations</p>
+                <p className={`text-3xl font-bold ${
+                  activeFilter === 'all' ? 'text-sangeet-400' : 'text-sangeet-neutral-100'
+                }`}>
                   {isLoading ? '...' : realTimeStats.total}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-sangeet-400/20 rounded-xl flex items-center justify-center">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                activeFilter === 'all' ? 'bg-sangeet-400/30' : 'bg-sangeet-400/20'
+              }`}>
                 <span className="text-xl">🍽️</span>
               </div>
             </div>
-          </motion.div>
+          </motion.button>
           
-          <motion.div
+          <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-sangeet-neutral-900 rounded-xl p-6 border border-sangeet-neutral-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            onClick={() => setActiveFilter('pending')}
+            className={`rounded-xl p-6 border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-xl ${
+              activeFilter === 'pending'
+                ? 'bg-yellow-400/20 border-yellow-400/50 shadow-lg'
+                : 'bg-yellow-900/20 border-yellow-500/30 hover:bg-yellow-900/30 hover:border-yellow-400/50'
+            }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sangeet-neutral-400 text-sm font-medium">Pending</p>
-                <p className="text-3xl font-bold text-yellow-400">
+                <p className={`text-sm font-medium ${
+                  activeFilter === 'pending' ? 'text-yellow-300' : 'text-yellow-400'
+                }`}>Pending</p>
+                <p className={`text-3xl font-bold ${
+                  activeFilter === 'pending' ? 'text-yellow-300' : 'text-yellow-400'
+                }`}>
                   {isLoading ? '...' : realTimeStats.pending}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-yellow-400/20 rounded-xl flex items-center justify-center">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                activeFilter === 'pending' ? 'bg-yellow-400/30' : 'bg-yellow-400/20'
+              }`}>
                 <span className="text-xl">⏳</span>
               </div>
             </div>
-          </motion.div>
+          </motion.button>
           
-          <motion.div
+          <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-sangeet-neutral-900 rounded-xl p-6 border border-sangeet-neutral-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            onClick={() => setActiveFilter('confirmed')}
+            className={`rounded-xl p-6 border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-xl ${
+              activeFilter === 'confirmed'
+                ? 'bg-blue-400/20 border-blue-400/50 shadow-lg'
+                : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-900/30 hover:border-blue-400/50'
+            }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sangeet-neutral-400 text-sm font-medium">Confirmed</p>
-                <p className="text-3xl font-bold text-blue-400">
+                <p className={`text-sm font-medium ${
+                  activeFilter === 'confirmed' ? 'text-blue-300' : 'text-blue-400'
+                }`}>Confirmed</p>
+                <p className={`text-3xl font-bold ${
+                  activeFilter === 'confirmed' ? 'text-blue-300' : 'text-blue-400'
+                }`}>
                   {isLoading ? '...' : realTimeStats.confirmed}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-blue-400/20 rounded-xl flex items-center justify-center">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                activeFilter === 'confirmed' ? 'bg-blue-400/30' : 'bg-blue-400/20'
+              }`}>
                 <span className="text-xl">✅</span>
               </div>
             </div>
-          </motion.div>
+          </motion.button>
           
-          <motion.div
+          <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-sangeet-neutral-900 rounded-xl p-6 border border-sangeet-neutral-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            onClick={() => setActiveFilter('completed')}
+            className={`rounded-xl p-6 border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-xl ${
+              activeFilter === 'completed'
+                ? 'bg-green-400/20 border-green-400/50 shadow-lg'
+                : 'bg-green-900/20 border-green-500/30 hover:bg-green-900/30 hover:border-green-400/50'
+            }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sangeet-neutral-400 text-sm font-medium">Completed</p>
-                <p className="text-3xl font-bold text-green-400">
+                <p className={`text-sm font-medium ${
+                  activeFilter === 'completed' ? 'text-green-300' : 'text-green-400'
+                }`}>Completed</p>
+                <p className={`text-3xl font-bold ${
+                  activeFilter === 'completed' ? 'text-green-300' : 'text-green-400'
+                }`}>
                   {isLoading ? '...' : realTimeStats.completed}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-green-400/20 rounded-xl flex items-center justify-center">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                activeFilter === 'completed' ? 'bg-green-400/30' : 'bg-green-400/20'
+              }`}>
                 <span className="text-xl">🎉</span>
               </div>
             </div>
-          </motion.div>
+          </motion.button>
           
-          <motion.div
+          <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-sangeet-neutral-900 rounded-xl p-6 border border-sangeet-neutral-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            onClick={() => setActiveFilter('cancelled')}
+            className={`rounded-xl p-6 border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-xl ${
+              activeFilter === 'cancelled'
+                ? 'bg-red-400/20 border-red-400/50 shadow-lg'
+                : 'bg-red-900/20 border-red-500/30 hover:bg-red-900/30 hover:border-red-400/50'
+            }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sangeet-neutral-400 text-sm font-medium">Cancelled</p>
-                <p className="text-3xl font-bold text-red-400">
+                <p className={`text-sm font-medium ${
+                  activeFilter === 'cancelled' ? 'text-red-300' : 'text-red-400'
+                }`}>Cancelled</p>
+                <p className={`text-3xl font-bold ${
+                  activeFilter === 'cancelled' ? 'text-red-300' : 'text-red-400'
+                }`}>
                   {isLoading ? '...' : realTimeStats.cancelled}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-red-400/20 rounded-xl flex items-center justify-center">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                activeFilter === 'cancelled' ? 'bg-red-400/30' : 'bg-red-400/20'
+              }`}>
                 <span className="text-xl">❌</span>
               </div>
             </div>
-          </motion.div>
+          </motion.button>
         </div>
 
         {/* Main Content Area */}
@@ -307,79 +366,7 @@ const ReservationManagementPage = () => {
                 
               </div>
 
-              {/* Restaurant Filter Tabs */}
-              <div className="flex flex-wrap gap-2 mt-4">
-                <button
-                  onClick={() => setFilters({ ...filters, status: '', date: '', guests: '' })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    !filters.status && !filters.date && !filters.guests
-                      ? 'bg-sangeet-400 text-sangeet-neutral-950 shadow-lg'
-                      : 'bg-sangeet-neutral-800 text-sangeet-neutral-300 hover:bg-sangeet-neutral-700 hover:text-sangeet-neutral-100'
-                  }`}
-                >
-                  📋 All Reservations
-                </button>
-                <button
-                  onClick={() => setFilters({ ...filters, status: 'pending', date: '', guests: '' })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    filters.status === 'pending'
-                      ? 'bg-yellow-500 text-white shadow-lg'
-                      : 'bg-sangeet-neutral-800 text-sangeet-neutral-300 hover:bg-sangeet-neutral-700 hover:text-sangeet-neutral-100'
-                  }`}
-                >
-                  ⏳ Pending
-                </button>
-                <button
-                  onClick={() => setFilters({ ...filters, status: 'confirmed', date: '', guests: '' })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    filters.status === 'confirmed'
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : 'bg-sangeet-neutral-800 text-sangeet-neutral-300 hover:bg-sangeet-neutral-700 hover:text-sangeet-neutral-100'
-                  }`}
-                >
-                  ✅ Confirmed
-                </button>
-                <button
-                  onClick={() => setFilters({ ...filters, date: new Date().toISOString().split('T')[0], status: '', guests: '' })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    filters.date === new Date().toISOString().split('T')[0]
-                      ? 'bg-purple-500 text-white shadow-lg'
-                      : 'bg-sangeet-neutral-800 text-sangeet-neutral-300 hover:bg-sangeet-neutral-700 hover:text-sangeet-neutral-100'
-                  }`}
-                >
-                  📅 Today
-                </button>
-                <button
-                  onClick={() => setFilters({ ...filters, guests: '6', status: '', date: '' })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    filters.guests === '6'
-                      ? 'bg-green-500 text-white shadow-lg'
-                      : 'bg-sangeet-neutral-800 text-sangeet-neutral-300 hover:bg-sangeet-neutral-700 hover:text-sangeet-neutral-100'
-                  }`}
-                >
-                  👥 Large Groups
-                </button>
-                <button
-                  onClick={() => setFilters({ ...filters, status: 'completed', date: '', guests: '' })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    filters.status === 'completed'
-                      ? 'bg-green-500 text-white shadow-lg'
-                      : 'bg-sangeet-neutral-800 text-sangeet-neutral-300 hover:bg-sangeet-neutral-700 hover:text-sangeet-neutral-100'
-                  }`}
-                >
-                  🎉 Completed
-                </button>
-                <button
-                  onClick={() => setFilters({ ...filters, status: 'cancelled', date: '', guests: '' })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    filters.status === 'cancelled'
-                      ? 'bg-red-500 text-white shadow-lg'
-                      : 'bg-sangeet-neutral-800 text-sangeet-neutral-300 hover:bg-sangeet-neutral-700 hover:text-sangeet-neutral-100'
-                  }`}
-                >
-                  ❌ Cancelled
-                </button>
-              </div>
+
             </motion.div>
 
             {/* Reservations Display */}

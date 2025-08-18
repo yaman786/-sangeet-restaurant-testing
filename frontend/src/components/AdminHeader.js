@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import RealTimeNotifications from './RealTimeNotifications';
+// Real-time notifications temporarily disabled during socket reset
+// import RealTimeNotifications from './RealTimeNotifications';
 import { logout } from '../utils/auth';
 
 const AdminHeader = ({ title, subtitle, showBackButton = true, onBackClick }) => {
@@ -89,8 +90,8 @@ const AdminHeader = ({ title, subtitle, showBackButton = true, onBackClick }) =>
               </motion.button>
             )}
 
-            {/* Real-time Notifications */}
-            <RealTimeNotifications />
+            {/* Real-time Notifications (disabled for clean socket reset) */}
+            {/* <RealTimeNotifications /> */}
 
             {/* User Menu */}
             <div className="relative group">

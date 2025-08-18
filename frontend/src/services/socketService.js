@@ -11,23 +11,51 @@ class SocketService {
     if (this.socket && this.isConnected) {
       return;
     }
+    
+    // If socket exists but not connected, disconnect first
+    if (this.socket && !this.isConnected) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
 
-    this.socket = io(process.env.REACT_APP_API_URL || 'http://localhost:5001', {
-      transports: ['websocket', 'polling']
-    });
+    // Use the base URL without /api for socket connection
+    const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+    const apiUrl = baseUrl.replace('/api', ''); // Remove /api if present
+    
+    try {
+      this.socket = io(apiUrl, {
+        transports: ['websocket', 'polling'],
+        timeout: 20000,
+        forceNew: false,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      });
+    } catch (error) {
+      console.error('Socket connection error:', error);
+      return;
+    }
 
     this.socket.on('connect', () => {
-      console.log('🔌 Connected to WebSocket server');
       this.isConnected = true;
+      // Do not auto-join any room. Pages/components must opt-in.
     });
 
     this.socket.on('disconnect', () => {
-      console.log('🔌 Disconnected from WebSocket server');
       this.isConnected = false;
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('🔌 WebSocket connection error:', error);
+      console.error('WebSocket connection error:', error);
+      this.isConnected = false;
+    });
+
+    this.socket.on('reconnect', (attemptNumber) => {
+      this.isConnected = true;
+    });
+
+    this.socket.on('reconnect_error', (error) => {
+      console.error('WebSocket reconnection error:', error);
       this.isConnected = false;
     });
   }
@@ -47,6 +75,17 @@ class SocketService {
     }
   }
 
+  // Join admin room for order notifications (alias)
+  joinAdminRoom() {
+    if (!this.socket) {
+      this.connect();
+    }
+    
+    if (this.socket) {
+      this.socket.emit('join-admin');
+    }
+  }
+
   // Join kitchen room for order notifications
   joinKitchen() {
     if (this.socket) {
@@ -61,10 +100,27 @@ class SocketService {
     }
   }
 
+  // Join table room for all table orders
+  joinTable(tableNumber) {
+    if (this.socket) {
+      this.socket.emit('join-table', tableNumber);
+    }
+  }
+
   // Listen for new orders
   onNewOrder(callback) {
+    if (!this.socket) {
+      this.connect();
+    }
+    
     if (this.socket) {
-      this.socket.on('new-order', callback);
+      this.socket.on('new-order', (data) => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error('Error in new-order callback:', error);
+        }
+      });
       this.listeners.set('new-order', callback);
     }
   }
@@ -72,8 +128,28 @@ class SocketService {
   // Listen for order status updates
   onOrderStatusUpdate(callback) {
     if (this.socket) {
-      this.socket.on('order-status-update', callback);
+      this.socket.on('order-status-update', (data) => {
+        callback(data);
+      });
       this.listeners.set('order-status-update', callback);
+    } else {
+      this.connect();
+      if (this.socket) {
+        this.socket.on('order-status-update', (data) => {
+          callback(data);
+        });
+        this.listeners.set('order-status-update', callback);
+      }
+    }
+  }
+
+
+
+  // Listen for table order updates
+  onTableOrderUpdate(callback) {
+    if (this.socket) {
+      this.socket.on('table-order-update', callback);
+      this.listeners.set('table-order-update', callback);
     }
   }
 
@@ -85,11 +161,27 @@ class SocketService {
     }
   }
 
+  // Listen for new items added to existing orders
+  onNewItemsAdded(callback) {
+    if (this.socket) {
+      this.socket.on('new-items-added', callback);
+      this.listeners.set('new-items-added', callback);
+    }
+  }
+
   // Listen for order cancellation
   onOrderCancelled(callback) {
     if (this.socket) {
       this.socket.on('order-cancelled', callback);
       this.listeners.set('order-cancelled', callback);
+    }
+  }
+
+  // Listen for order deletion
+  onOrderDeleted(callback) {
+    if (this.socket) {
+      this.socket.on('order-deleted', callback);
+      this.listeners.set('order-deleted', callback);
     }
   }
 

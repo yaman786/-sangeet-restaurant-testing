@@ -6,6 +6,7 @@ const {
   createOrder,
   getOrderById,
   getOrdersByTable,
+  getOrdersByTableNumber,
   updateOrderStatus,
   getAllOrders,
   getOrderStats,
@@ -29,6 +30,7 @@ router.get('/qr/generate-all', generateAllTableQRCodes);
 router.post('/', createOrder);
 router.get('/stats', getOrderStats);
 router.get('/table/:tableId', getOrdersByTable);
+router.get('/table-number/:tableNumber', getOrdersByTableNumber);
 
 // Admin routes (place specific routes before parameterized routes)
 router.get('/search', searchOrders);

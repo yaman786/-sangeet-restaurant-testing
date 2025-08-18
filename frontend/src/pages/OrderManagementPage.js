@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import AdminHeader from '../components/AdminHeader';
+import socketService from '../services/socketService';
 import {
   fetchAllOrders,
   updateOrderStatus,
@@ -25,6 +26,7 @@ const OrderManagementPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'detailed'
   const [updatingOrder, setUpdatingOrder] = useState(null); // Track which order is being updated
+  const [completedOrders, setCompletedOrders] = useState([]); // Track completed orders separately
 
   useEffect(() => {
     // Get user role from localStorage
@@ -42,6 +44,60 @@ const OrderManagementPage = () => {
     loadData();
   }, [filters]);
 
+  // Setup real-time socket listeners - using a different approach since RealTimeNotifications already handles socket
+  const setupSocketListeners = useCallback(() => {
+    try {
+      console.log('🔌 OrderManagement: Setting up socket listeners...');
+      
+      // Ensure socket is connected first
+      if (!socketService.isConnected) {
+        console.log('🔌 OrderManagement: Socket not connected, connecting...');
+        socketService.connect();
+      }
+      
+      // Join admin room
+      socketService.joinAdmin();
+      
+      // Listen for new orders
+      socketService.onNewOrder((data) => {
+        console.log('📦 OrderManagement: New order received:', data);
+        console.log('📦 OrderManagement: Reloading data...');
+        // Reload data to get the latest orders
+        loadData();
+      });
+
+      // Listen for order status updates
+      socketService.onOrderStatusUpdate((data) => {
+        console.log('📦 OrderManagement: Status update received:', data);
+        // Reload data to get the latest status
+        loadData();
+      });
+
+      // Listen for order deletions
+      socketService.onOrderDeleted((data) => {
+        console.log('📦 OrderManagement: Order deleted:', data);
+        // Reload data to remove deleted order
+        loadData();
+      });
+
+    } catch (error) {
+      console.error('Error setting up socket listeners:', error);
+    }
+  }, []); // Empty dependency array to prevent recreation
+
+  useEffect(() => {
+    console.log('🔌 OrderManagement: useEffect triggered - setting up socket listeners');
+    // Setup socket listeners immediately
+    setupSocketListeners();
+
+    return () => {
+      console.log('🔌 OrderManagement: Cleanup - removing socket listeners');
+      socketService.removeListener('new-order');
+      socketService.removeListener('order-status-update');
+      socketService.removeListener('order-deleted');
+    };
+  }, []); // Empty dependency array to run only once
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -51,7 +107,12 @@ const OrderManagementPage = () => {
         fetchOrderStats()
       ]);
       
-      setOrders(ordersData || []);
+      // Separate completed orders from active orders
+      const activeOrders = (ordersData || []).filter(order => order.status !== 'completed');
+      const completedOrders = (ordersData || []).filter(order => order.status === 'completed');
+      
+      setOrders(activeOrders);
+      setCompletedOrders(completedOrders);
       setTables(tablesData || []);
       setStats(statsData || {});
     } catch (error) {
@@ -59,7 +120,7 @@ const OrderManagementPage = () => {
       console.log('Using fallback data - API may not be available');
       
       // Fallback data if API fails
-      setOrders([
+      const fallbackActiveOrders = [
         {
           id: 1,
           order_number: 'ORD-001',
@@ -86,7 +147,26 @@ const OrderManagementPage = () => {
             { name: 'Biryani', quantity: 1, price: 22.99 }
           ]
         }
-      ]);
+      ];
+      
+      const fallbackCompletedOrders = [
+        {
+          id: 3,
+          order_number: 'ORD-003',
+          customer_name: 'Mike Wilson',
+          table_id: 2,
+          status: 'completed',
+          total_amount: 28.50,
+          created_at: new Date(Date.now() - 7200000).toISOString(),
+          items: [
+            { name: 'Chicken Tikka', quantity: 1, price: 12.00 },
+            { name: 'Momo Dumplings', quantity: 1, price: 18.00 }
+          ]
+        }
+      ];
+      
+      setOrders(fallbackActiveOrders);
+      setCompletedOrders(fallbackCompletedOrders);
       
       setTables([
         { id: 1, table_number: 'Table 1', capacity: 4, status: 'occupied' },
@@ -103,7 +183,7 @@ const OrderManagementPage = () => {
         total_revenue: 78.49
       });
       
-      toast.info('Using demo data - API may not be available');
+              toast.success('Using demo data - API may not be available');
     } finally {
       setLoading(false);
     }
@@ -132,6 +212,11 @@ const OrderManagementPage = () => {
     } catch (error) {
       toast.error('Failed to delete order');
     }
+  };
+
+  const clearCompletedOrders = () => {
+    setCompletedOrders([]);
+    toast.success('Completed orders cleared');
   };
 
   const getStatusColor = (status) => {
@@ -176,12 +261,15 @@ const OrderManagementPage = () => {
     if (userRole !== 'admin') {
       // Staff only sees active orders (not completed/cancelled)
       filtered = filtered.filter(order => 
-        ['pending', 'confirmed', 'preparing', 'ready'].includes(order.status)
+        ['pending', 'preparing', 'ready'].includes(order.status)
       );
     }
 
     // Apply status filter
-    if (filters.status) {
+    if (filters.status === 'completed') {
+      // Show completed orders
+      filtered = completedOrders;
+    } else if (filters.status) {
       filtered = filtered.filter(order => order.status === filters.status);
     }
 
@@ -204,16 +292,17 @@ const OrderManagementPage = () => {
 
   const filteredOrders = getFilteredOrders();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-sangeet-neutral-50">
-        <AdminHeader />
+  // Always render the main component to ensure socket setup runs
+  return (
+    <div className="min-h-screen bg-sangeet-neutral-50">
+      <AdminHeader />
+      
+      {loading ? (
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sangeet-400"></div>
         </div>
-      </div>
-    );
-  }
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
   return (
     <div className="min-h-screen bg-sangeet-neutral-50">
@@ -263,7 +352,7 @@ const OrderManagementPage = () => {
             >
               <h3 className="text-sm font-medium text-sangeet-neutral-600">Active Orders</h3>
               <p className="text-2xl font-bold text-blue-600">
-                {orders.filter(o => ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status)).length}
+                {orders.filter(o => ['pending', 'preparing', 'ready'].includes(o.status)).length}
               </p>
             </motion.div>
             
@@ -341,16 +430,7 @@ const OrderManagementPage = () => {
                 >
                   ⏳ Pending
                 </button>
-                <button
-                  onClick={() => setFilters({ ...filters, status: 'confirmed' })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
-                    filters.status === 'confirmed'
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300'
-                  }`}
-                >
-                  ✅ Confirmed
-                </button>
+
                 <button
                   onClick={() => setFilters({ ...filters, status: 'preparing' })}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
@@ -371,29 +451,40 @@ const OrderManagementPage = () => {
                 >
                   🎉 Ready
                 </button>
+                <button
+                  onClick={() => setFilters({ ...filters, status: 'completed' })}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
+                    filters.status === 'completed'
+                      ? 'bg-gray-500 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                  }`}
+                >
+                  ✅ Completed
+                  {completedOrders.length > 0 && (
+                    <span className="ml-1 bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded-full text-xs">
+                      {completedOrders.length}
+                    </span>
+                  )}
+                </button>
                 {userRole === 'admin' && (
-                  <>
-                    <button
-                      onClick={() => setFilters({ ...filters, status: 'completed' })}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
-                        filters.status === 'completed'
-                          ? 'bg-gray-500 text-white shadow-lg'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                      }`}
-                    >
-                      ✅ Completed
-                    </button>
-                    <button
-                      onClick={() => setFilters({ ...filters, status: 'cancelled' })}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
-                        filters.status === 'cancelled'
-                          ? 'bg-red-500 text-white shadow-lg'
-                          : 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300'
-                      }`}
-                    >
-                      ❌ Cancelled
-                    </button>
-                  </>
+                  <button
+                    onClick={() => setFilters({ ...filters, status: 'cancelled' })}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
+                      filters.status === 'cancelled'
+                        ? 'bg-red-500 text-white shadow-lg'
+                        : 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300'
+                    }`}
+                  >
+                    ❌ Cancelled
+                  </button>
+                )}
+                {filters.status === 'completed' && completedOrders.length > 0 && (
+                  <button
+                    onClick={clearCompletedOrders}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Clear
+                  </button>
                 )}
               </div>
             </div>
@@ -755,7 +846,8 @@ const OrderManagementPage = () => {
             )}
           </div>
         </div>
-      </div>
+      )}
+    </div>
 
       {/* Delete Confirmation Modal - Admin Only */}
       {userRole === 'admin' && showDeleteModal && selectedOrder && (

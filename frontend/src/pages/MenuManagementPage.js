@@ -11,6 +11,7 @@ import {
 } from '../services/api';
 import toast from 'react-hot-toast';
 import AdminHeader from '../components/AdminHeader';
+import CustomDropdown from '../components/CustomDropdown';
 
 const MenuManagementPage = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -21,6 +22,10 @@ const MenuManagementPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteType, setDeleteType] = useState(''); // 'item' or 'category'
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteName, setDeleteName] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   
@@ -50,6 +55,23 @@ const MenuManagementPage = () => {
     description: '',
     display_order: 0
   });
+
+  // Dropdown options
+  const priceRangeOptions = [
+    { value: '', label: 'All Prices' },
+    { value: '0-10', label: 'Under $10' },
+    { value: '10-20', label: '$10 - $20' },
+    { value: '20-30', label: '$20 - $30' },
+    { value: '30-999', label: 'Over $30' }
+  ];
+
+  const sortOptions = [
+    { value: 'name-asc', label: 'Name (A-Z)' },
+    { value: 'name-desc', label: 'Name (Z-A)' },
+    { value: 'price-asc', label: 'Price (Low-High)' },
+    { value: 'price-desc', label: 'Price (High-Low)' },
+    { value: 'category-asc', label: 'Category (A-Z)' }
+  ];
 
   useEffect(() => {
     loadData();
@@ -235,12 +257,18 @@ const MenuManagementPage = () => {
   };
 
   const handleDeleteItem = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this menu item?')) {
-      return;
-    }
+    const item = menuItems.find(item => item.id === id);
+    setDeleteType('item');
+    setDeleteId(id);
+    setDeleteName(item?.name || 'this menu item');
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteItem = async () => {
     try {
-      await deleteMenuItem(id);
+      await deleteMenuItem(deleteId);
       toast.success('Menu item deleted successfully!');
+      setShowDeleteModal(false);
       loadData();
     } catch (error) {
       console.error('Error deleting menu item:', error);
@@ -281,12 +309,18 @@ const MenuManagementPage = () => {
   };
 
   const handleDeleteCategory = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this category?')) {
-      return;
-    }
+    const category = categories.find(cat => cat.id === id);
+    setDeleteType('category');
+    setDeleteId(id);
+    setDeleteName(category?.name || 'this category');
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteCategory = async () => {
     try {
-      await deleteCategory(id);
+      await deleteCategory(deleteId);
       toast.success('Category deleted successfully!');
+      setShowDeleteModal(false);
       loadData();
     } catch (error) {
       console.error('Error deleting category:', error);
@@ -434,54 +468,44 @@ const MenuManagementPage = () => {
                 {/* Category Filter */}
                 <div>
                   <label className="block text-sm font-medium text-sangeet-neutral-300 mb-1">Category</label>
-                  <select
+                  <CustomDropdown
                     value={filters.category}
-                    onChange={(e) => handleFilterChange('category', e.target.value)}
-                    className="w-full px-3 py-2 bg-sangeet-neutral-800 border border-sangeet-neutral-600 rounded-lg text-sangeet-neutral-100"
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.name}>
-                        {category.name} ({category.item_count})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(category) => handleFilterChange('category', category)}
+                    options={[
+                      { value: '', label: 'All Categories' },
+                      ...categories.map((category) => ({
+                        value: category.name,
+                        label: `${category.name} (${category.item_count})`
+                      }))
+                    ]}
+                    className="w-full"
+                  />
                 </div>
 
                 {/* Price Range */}
                 <div>
                   <label className="block text-sm font-medium text-sangeet-neutral-300 mb-1">Price Range</label>
-                  <select
+                  <CustomDropdown
                     value={filters.priceRange}
-                    onChange={(e) => handleFilterChange('priceRange', e.target.value)}
-                    className="w-full px-3 py-2 bg-sangeet-neutral-800 border border-sangeet-neutral-600 rounded-lg text-sangeet-neutral-100"
-                  >
-                    <option value="">All Prices</option>
-                    <option value="0-10">Under $10</option>
-                    <option value="10-20">$10 - $20</option>
-                    <option value="20-30">$20 - $30</option>
-                    <option value="30-999">Over $30</option>
-                  </select>
+                    onChange={(priceRange) => handleFilterChange('priceRange', priceRange)}
+                    options={priceRangeOptions}
+                    className="w-full"
+                  />
                 </div>
 
                 {/* Sort */}
                 <div>
                   <label className="block text-sm font-medium text-sangeet-neutral-300 mb-1">Sort By</label>
-                  <select
+                  <CustomDropdown
                     value={`${filters.sortBy}-${filters.sortOrder}`}
-                    onChange={(e) => {
-                      const [sortBy, sortOrder] = e.target.value.split('-');
+                    onChange={(value) => {
+                      const [sortBy, sortOrder] = value.split('-');
                       handleFilterChange('sortBy', sortBy);
                       handleFilterChange('sortOrder', sortOrder);
                     }}
-                    className="w-full px-3 py-2 bg-sangeet-neutral-800 border border-sangeet-neutral-600 rounded-lg text-sangeet-neutral-100"
-                  >
-                    <option value="name-asc">Name (A-Z)</option>
-                    <option value="name-desc">Name (Z-A)</option>
-                    <option value="price-asc">Price (Low-High)</option>
-                    <option value="price-desc">Price (High-Low)</option>
-                    <option value="category-asc">Category (A-Z)</option>
-                  </select>
+                    options={sortOptions}
+                    className="w-full"
+                  />
                 </div>
               </div>
 
@@ -688,20 +712,20 @@ const MenuManagementPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-sangeet-neutral-300 mb-1">Category</label>
-                    <select
-                      name="category_id"
+                    <CustomDropdown
                       value={formData.category_id}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 bg-sangeet-neutral-800 border border-sangeet-neutral-600 rounded-lg text-sangeet-neutral-100"
-                      required
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(categoryId) => {
+                        setFormData(prev => ({ ...prev, category_id: categoryId }));
+                      }}
+                      options={[
+                        { value: '', label: 'Select Category' },
+                        ...categories.map((category) => ({
+                          value: category.id,
+                          label: category.name
+                        }))
+                      ]}
+                      className="w-full"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-sangeet-neutral-300 mb-1">Image URL</label>
@@ -837,6 +861,44 @@ const MenuManagementPage = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-sangeet-neutral-900 rounded-lg p-6 w-full max-w-md">
+              <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                  <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-sangeet-neutral-100 mb-2">
+                  Delete {deleteType === 'item' ? 'Menu Item' : 'Category'}
+                </h3>
+                <p className="text-sm text-sangeet-neutral-300 mb-6">
+                  Are you sure you want to delete <span className="font-semibold text-sangeet-400">"{deleteName}"</span>? 
+                  This action cannot be undone.
+                </p>
+                <div className="flex justify-center space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteModal(false)}
+                    className="px-4 py-2 text-sangeet-neutral-400 hover:text-sangeet-neutral-200 border border-sangeet-neutral-600 rounded-lg hover:border-sangeet-neutral-500 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={deleteType === 'item' ? confirmDeleteItem : confirmDeleteCategory}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

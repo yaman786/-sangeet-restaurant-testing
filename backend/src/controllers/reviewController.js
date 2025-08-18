@@ -29,14 +29,22 @@ const getVerifiedReviews = async (req, res) => {
 // Submit a new review
 const createReview = async (req, res) => {
   try {
-    const { customer_name, review_text, rating, image_url } = req.body;
+    const { customer_name, review_text, rating, image_url, order_id, table_number } = req.body;
+    
+    // Convert order_id to integer if it exists, otherwise null
+    const parsedOrderId = order_id ? parseInt(order_id, 10) : null;
+    
+    // Validate order_id is a valid number
+    if (order_id && (isNaN(parsedOrderId) || parsedOrderId <= 0)) {
+      return res.status(400).json({ error: 'Invalid order ID' });
+    }
     
     const result = await pool.query(
       `INSERT INTO customer_reviews 
-       (customer_name, review_text, rating, image_url)
-       VALUES ($1, $2, $3, $4)
+       (customer_name, review_text, rating, image_url, order_id, table_number)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [customer_name, review_text, rating, image_url || null]
+      [customer_name, review_text, rating, image_url || null, parsedOrderId, table_number || null]
     );
     
     res.status(201).json({
