@@ -116,6 +116,9 @@ function App() {
     hostname: window.location.hostname
   });
 
+  // Force rebuild debug
+  console.log('🚀 FORCE REBUILD - API URL is hardcoded to: https://sangeet-restaurant-api.onrender.com/api');
+
   // Memoized route checks for performance
   const routeConfig = useMemo(() => ({
     isQRRoute: location.pathname.startsWith('/qr/'),
