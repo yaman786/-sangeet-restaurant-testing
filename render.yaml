@@ -28,4 +28,4 @@ services:
     name: sangeet-restaurant-db
     env: postgresql
     plan: free
-    ipAllowList: []
+    startCommand: postgres
