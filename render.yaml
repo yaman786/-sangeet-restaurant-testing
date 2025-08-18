@@ -26,6 +26,4 @@ services:
   # PostgreSQL Database
   - type: pserv
     name: sangeet-restaurant-db
-    runtime: postgresql
     plan: free
-    startCommand: postgres
