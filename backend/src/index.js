@@ -158,18 +158,7 @@ function createApp() {
     }
   });
 
-  // Temporary database fix endpoint (remove after use)
-  app.post('/api/fix-database', async (req, res) => {
-    try {
-      console.log('🔧 Starting database fix via API endpoint...');
-      const { fixRenderDatabase } = require('../scripts/fix-render-database');
-      await fixRenderDatabase();
-      res.json({ success: true, message: 'Database fix completed successfully' });
-    } catch (error) {
-      console.error('Database fix failed:', error);
-      res.status(500).json({ success: false, error: error.message });
-    }
-  });
+
 
   // API routes
   app.use('/api/auth', authRoutes);
@@ -244,16 +233,6 @@ const io = initializeSocket(server);
 // Start server
 startServer(app, server);
 
-// Auto-fix database on startup (temporary)
-setTimeout(async () => {
-  try {
-    console.log('🔧 Auto-fixing database on startup...');
-    const { fixRenderDatabase } = require('../scripts/fix-render-database');
-    await fixRenderDatabase();
-    console.log('✅ Database auto-fix completed');
-  } catch (error) {
-    console.error('❌ Database auto-fix failed:', error);
-  }
-}, 5000); // Wait 5 seconds after startup
+
 
 module.exports = { app, server }; 
