@@ -119,16 +119,17 @@ const StaffManagementPage = () => {
         }
       ]);
       
-      setStats({
-        total: 3,
-        active: 3,
-        inactive: 0,
-        admins: 1,
-        staff: 2,
-        recent: 3
-      });
+      // Show error message instead of demo data
+      toast.error('Failed to load staff data. Please check your connection and try again.');
       
-              toast.success('Using demo data - API may not be available');
+      setStats({
+        total: 0,
+        active: 0,
+        inactive: 0,
+        admins: 0,
+        staff: 0,
+        recent: 0
+      });
     }
   };
 

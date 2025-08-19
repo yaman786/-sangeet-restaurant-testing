@@ -168,22 +168,18 @@ const OrderManagementPage = () => {
       setOrders(fallbackActiveOrders);
       setCompletedOrders(fallbackCompletedOrders);
       
-      setTables([
-        { id: 1, table_number: 'Table 1', capacity: 4, status: 'occupied' },
-        { id: 2, table_number: 'Table 2', capacity: 6, status: 'available' },
-        { id: 3, table_number: 'Table 3', capacity: 4, status: 'occupied' },
-        { id: 4, table_number: 'Table 4', capacity: 2, status: 'available' }
-      ]);
+      // Show error message instead of demo data
+      toast.error('Failed to load data. Please check your connection and try again.');
       
+      // Set empty arrays instead of demo data
+      setTables([]);
       setStats({
-        total_orders: 2,
-        pending_orders: 1,
-        preparing_orders: 1,
+        total_orders: 0,
+        pending_orders: 0,
+        preparing_orders: 0,
         completed_orders: 0,
-        total_revenue: 78.49
+        total_revenue: 0
       });
-      
-              toast.success('Using demo data - API may not be available');
     } finally {
       setLoading(false);
     }
