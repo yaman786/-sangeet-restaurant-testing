@@ -20,7 +20,7 @@
     }
   ],
   "env": {
-    "REACT_APP_API_URL": "https://sangeet-restaurant-api.onrender.com",
+            "REACT_APP_API_URL": "https://sangeet-restaurant-api.onrender.com/api",
     "REACT_APP_SOCKET_URL": "https://sangeet-restaurant-api.onrender.com"
   }
 }
