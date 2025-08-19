@@ -158,6 +158,19 @@ function createApp() {
     }
   });
 
+  // Temporary database fix endpoint (remove after use)
+  app.post('/api/fix-database', async (req, res) => {
+    try {
+      console.log('🔧 Starting database fix via API endpoint...');
+      const { fixRenderDatabase } = require('../scripts/fix-render-database');
+      await fixRenderDatabase();
+      res.json({ success: true, message: 'Database fix completed successfully' });
+    } catch (error) {
+      console.error('Database fix failed:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // API routes
   app.use('/api/auth', authRoutes);
   app.use('/api/menu', menuRoutes);

@@ -9,6 +9,7 @@
     "test": "jest",
     "migrate": "node scripts/migrate.js",
     "migrate:render": "node scripts/migrate-render.js",
+    "fix-db": "node scripts/fix-render-database.js",
     "build": "echo 'No build step needed for Node.js'"
   },
   "dependencies": {
