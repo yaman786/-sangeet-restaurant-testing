@@ -109,24 +109,10 @@ function App() {
   
   const location = useLocation();
 
-  // Temporary debug log
-  console.log('🔍 API URL Debug:', {
-    REACT_APP_API_URL: process.env.REACT_APP_API_URL,
-    NODE_ENV: process.env.NODE_ENV,
-    hostname: window.location.hostname
-  });
-
-  // Force rebuild debug
-  console.log('🚀 FORCE REBUILD - API URL is hardcoded to: https://sangeet-restaurant-api.onrender.com/api');
-
   // Memoized route checks for performance
-  const routeConfig = useMemo(() => ({
-    isQRRoute: location.pathname.startsWith('/qr/'),
-    isAdminRoute: location.pathname.startsWith('/admin/'),
-    isKitchenRoute: location.pathname.startsWith('/kitchen/'),
-    isLoginRoute: location.pathname === '/login',
-    isStandaloneRoute: location.pathname === '/order' || location.pathname === '/dashboard'
-  }), [location.pathname]);
+  const isQRRoute = useMemo(() => {
+    return location.pathname.startsWith('/qr/');
+  }, [location.pathname]);
 
   // Memoized data loading function
   const loadData = useCallback(async () => {
@@ -279,7 +265,7 @@ function App() {
   }
 
   // QR Ordering Experience (Standalone)
-  if (routeConfig.isQRRoute) {
+  if (isQRRoute) {
     return (
       <div className={CONTAINER_CLASSES}>
         <ScrollToTop />
@@ -316,7 +302,7 @@ function App() {
   }
 
   // Kitchen Experience (Standalone)
-  if (routeConfig.isKitchenRoute) {
+  if (location.pathname.startsWith('/kitchen/')) {
     return (
       <div className={CONTAINER_CLASSES}>
         <ScrollToTop />
@@ -349,7 +335,7 @@ function App() {
   }
 
   // Standalone Pages Experience (No Header/Footer)
-  if (routeConfig.isStandaloneRoute) {
+  if (location.pathname === '/order' || location.pathname === '/dashboard') {
     return (
       <div className={CONTAINER_CLASSES}>
         <ScrollToTop />
@@ -374,7 +360,7 @@ function App() {
   }
 
   // Login Experience (Standalone)
-  if (routeConfig.isLoginRoute) {
+  if (location.pathname === '/login') {
     return (
       <div className={CONTAINER_CLASSES}>
         <ScrollToTop />
@@ -395,7 +381,7 @@ function App() {
   }
 
   // Admin Dashboard Experience (Standalone)
-  if (routeConfig.isAdminRoute) {
+  if (location.pathname.startsWith('/admin/')) {
     return (
       <div className={CONTAINER_CLASSES}>
         <ScrollToTop />

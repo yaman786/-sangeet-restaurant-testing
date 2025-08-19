@@ -447,13 +447,8 @@ export const checkApiHealth = async () => {
 // Authentication API calls
 export const loginUser = async (credentials) => {
   try {
-    console.log('🔍 Debug: BASE_URL =', API_CONFIG.BASE_URL);
-    console.log('🔍 Debug: api.defaults.baseURL =', api.defaults.baseURL);
-    
     const result = await apiCallWrapper(async () => {
-      console.log('🔍 Debug: About to call api.post("/auth/login", credentials)');
       const response = await api.post('/auth/login', credentials);
-      console.log('🔍 Debug: Response received:', response);
       return response;
     }, 'loginUser', false);
     return result;
