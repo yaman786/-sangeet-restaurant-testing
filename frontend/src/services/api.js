@@ -9,6 +9,9 @@ const API_CONFIG = {
   RETRY_DELAY: 1000
 };
 
+// Add cache busting to force fresh API calls
+const CACHE_BUST = Date.now();
+
 // Error types for better error handling
 export const API_ERROR_TYPES = {
   NETWORK: 'NETWORK_ERROR',
@@ -39,6 +42,9 @@ const api = axios.create({
   timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
   },
 });
 
