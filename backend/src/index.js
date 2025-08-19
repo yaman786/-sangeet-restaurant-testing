@@ -244,4 +244,16 @@ const io = initializeSocket(server);
 // Start server
 startServer(app, server);
 
+// Auto-fix database on startup (temporary)
+setTimeout(async () => {
+  try {
+    console.log('🔧 Auto-fixing database on startup...');
+    const { fixRenderDatabase } = require('../scripts/fix-render-database');
+    await fixRenderDatabase();
+    console.log('✅ Database auto-fix completed');
+  } catch (error) {
+    console.error('❌ Database auto-fix failed:', error);
+  }
+}, 5000); // Wait 5 seconds after startup
+
 module.exports = { app, server }; 
