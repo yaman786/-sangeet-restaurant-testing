@@ -89,7 +89,7 @@ const findActiveOrder = async (tableId, customerName) => {
       JOIN tables t ON o.table_id = t.id 
       WHERE o.table_id = $1 
         AND o.customer_name = $2 
-        AND o.status != 'completed'
+        AND o.status NOT IN ('completed', 'cancelled')
       ORDER BY o.created_at DESC 
       LIMIT 1
     `, [tableId, customerName]);
@@ -104,15 +104,26 @@ const findActiveOrder = async (tableId, customerName) => {
 // Function to add items to existing order
 const addItemsToExistingOrder = async (orderId, items) => {
   try {
+    console.log(`🔄 Adding ${items.length} items to existing order ${orderId}`);
+    
     // Add each item to the existing order
     for (const item of items) {
+      console.log(`📦 Processing item: ${item.menu_item_id}, quantity: ${item.quantity}`);
+      
       const menuItemResult = await pool.query(
         'SELECT price FROM menu_items WHERE id = $1',
         [item.menu_item_id]
       );
       
+      if (menuItemResult.rows.length === 0) {
+        console.error(`❌ Menu item ${item.menu_item_id} not found`);
+        throw new Error(`Menu item ${item.menu_item_id} not found`);
+      }
+      
       const unitPrice = parseFloat(menuItemResult.rows[0].price);
       const totalPrice = unitPrice * item.quantity;
+
+      console.log(`💰 Item pricing: unitPrice=${unitPrice}, totalPrice=${totalPrice}`);
 
       await pool.query(
         `INSERT INTO order_items 
@@ -120,9 +131,12 @@ const addItemsToExistingOrder = async (orderId, items) => {
          VALUES ($1, $2, $3, $4, $5, $6)`,
         [orderId, item.menu_item_id, item.quantity, unitPrice, totalPrice, item.special_requests || '']
       );
+      
+      console.log(`✅ Successfully added item ${item.menu_item_id} to order ${orderId}`);
     }
 
     // Update order total
+    console.log(`🔄 Updating total amount for order ${orderId}`);
     await pool.query(`
       UPDATE orders 
       SET total_amount = (
@@ -134,9 +148,10 @@ const addItemsToExistingOrder = async (orderId, items) => {
       WHERE id = $1
     `, [orderId]);
 
+    console.log(`✅ Successfully updated order ${orderId} total amount`);
     return true;
   } catch (error) {
-    console.error('Error adding items to existing order:', error);
+    console.error('❌ Error adding items to existing order:', error);
     return false;
   }
 };

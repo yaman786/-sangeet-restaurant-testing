@@ -217,8 +217,9 @@ const QRCartPage = () => {
       
       const orderId = orderResponse?.order?.id;
       const orderNumber = orderResponse?.order?.order_number;
+      const isMerged = orderResponse?.merged || false;
       
-      console.log('📋 Extracted order details:', { orderId, orderNumber });
+      console.log('📋 Extracted order details:', { orderId, orderNumber, isMerged });
       
       if (!orderId) {
         console.error('❌ No order ID found in response');
@@ -233,7 +234,12 @@ const QRCartPage = () => {
       localStorage.removeItem(`customer_${qrCode}`);
       localStorage.removeItem(`instructions_${qrCode}`);
       
-      toast.success('Order placed successfully!');
+      // Show appropriate success message based on whether items were merged
+      if (isMerged) {
+        toast.success('Items added to your existing order successfully!');
+      } else {
+        toast.success('Order placed successfully!');
+      }
       
       // Navigate to unified dashboard page
       const dashboardUrl = `/dashboard?orderId=${orderId}&table=${tableInfo?.table_number}&customerName=${encodeURIComponent(customerName)}&orderNumber=${orderNumber || ''}&totalAmount=${getTotalAmount().toFixed(2)}`;
