@@ -340,13 +340,28 @@ const emailTemplates = {
 // Send email function
 const sendEmail = async (to, template, data) => {
   try {
-    const transporter = createTransporter();
     const emailContent = emailTemplates[template](data);
+    
+    // Check if we have proper email credentials
+    const hasEmailCredentials = process.env.EMAIL_USER && process.env.EMAIL_PASSWORD;
+    
+    if (!hasEmailCredentials) {
+      // Log the email instead of sending (for development/production without email setup)
+      console.log('📧 EMAIL LOGGED (not sent - no credentials):');
+      console.log('📧 To:', to);
+      console.log('📧 Subject:', emailContent.subject);
+      console.log('📧 Content length:', emailContent.html.length, 'characters');
+      console.log('📧 To enable real emails, set EMAIL_USER and EMAIL_PASSWORD environment variables');
+      
+      return { success: true, messageId: 'logged-' + Date.now() };
+    }
+    
+    const transporter = createTransporter();
     
     const mailOptions = {
       from: {
         name: 'Sangeet Restaurant',
-        address: process.env.EMAIL_USER || 'your-email@gmail.com'
+        address: process.env.EMAIL_USER
       },
       to: to,
       subject: emailContent.subject,
@@ -354,10 +369,10 @@ const sendEmail = async (to, template, data) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', result.messageId);
+    console.log('📧 Email sent successfully:', result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('❌ Error sending email:', error);
     return { success: false, error: error.message };
   }
 };

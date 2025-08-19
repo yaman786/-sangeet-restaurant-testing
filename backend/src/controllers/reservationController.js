@@ -200,13 +200,13 @@ const createReservation = async (req, res) => {
 
     const newReservation = result.rows[0];
 
-    // Send email notification for new reservation (temporarily disabled)
-    // try {
-    //   await sendReservationCreatedEmail(newReservation);
-    // } catch (emailError) {
-    //   console.error('Error sending reservation created email:', emailError);
-    //   // Don't fail the request if email fails
-    // }
+    // Send email notification for new reservation
+    try {
+      await sendReservationCreatedEmail(newReservation);
+    } catch (emailError) {
+      console.error('Error sending reservation created email:', emailError);
+      // Don't fail the request if email fails
+    }
 
     res.status(201).json({
       message: 'Reservation created successfully',
