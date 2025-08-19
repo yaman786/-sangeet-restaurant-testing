@@ -140,20 +140,49 @@ const createReservation = async (req, res) => {
     // If table_id is not provided, find an available table
     let finalTableId = table_id;
     if (!finalTableId) {
-      const availableTablesQuery = `SELECT * FROM get_available_tables($1, $2, $3) LIMIT 1`;
-      const availableResult = await pool.query(availableTablesQuery, [date, time, guests]);
+      // Simple query to find available table
+      const availableTablesQuery = `
+        SELECT rt.id, rt.table_number, rt.capacity
+        FROM restaurant_tables rt
+        WHERE rt.is_active = true
+          AND rt.capacity >= $1
+          AND NOT EXISTS (
+              SELECT 1 FROM reservations r
+              WHERE r.table_id = rt.id
+                AND r.date = $2
+                AND r.time = $3
+                AND r.status NOT IN ('cancelled', 'no-show')
+          )
+        ORDER BY rt.capacity ASC, rt.table_number ASC
+        LIMIT 1
+      `;
+      const availableResult = await pool.query(availableTablesQuery, [guests, date, time]);
       
       if (availableResult.rows.length === 0) {
         return res.status(400).json({ error: 'No available tables for the selected date and time' });
       }
       
-      finalTableId = availableResult.rows[0].table_id;
+      finalTableId = availableResult.rows[0].id;
     } else {
-      // Check table availability
-      const availabilityQuery = `SELECT check_table_availability($1, $2, $3, $4)`;
-      const availabilityResult = await pool.query(availabilityQuery, [finalTableId, date, time, guests]);
+      // Check table availability with simple query
+      const availabilityQuery = `
+        SELECT 
+          rt.capacity >= $1 as can_accommodate,
+          NOT EXISTS (
+            SELECT 1 FROM reservations r
+            WHERE r.table_id = $2
+              AND r.date = $3
+              AND r.time = $4
+              AND r.status NOT IN ('cancelled', 'no-show')
+          ) as is_available
+        FROM restaurant_tables rt
+        WHERE rt.id = $2 AND rt.is_active = true
+      `;
+      const availabilityResult = await pool.query(availabilityQuery, [guests, finalTableId, date, time]);
       
-      if (!availabilityResult.rows[0].check_table_availability) {
+      if (availabilityResult.rows.length === 0 || 
+          !availabilityResult.rows[0].can_accommodate || 
+          !availabilityResult.rows[0].is_available) {
         return res.status(400).json({ error: 'Table not available for the selected date and time' });
       }
     }
@@ -171,13 +200,13 @@ const createReservation = async (req, res) => {
 
     const newReservation = result.rows[0];
 
-    // Send email notification for new reservation
-    try {
-      await sendReservationCreatedEmail(newReservation);
-    } catch (emailError) {
-      console.error('Error sending reservation created email:', emailError);
-      // Don't fail the request if email fails
-    }
+    // Send email notification for new reservation (temporarily disabled)
+    // try {
+    //   await sendReservationCreatedEmail(newReservation);
+    // } catch (emailError) {
+    //   console.error('Error sending reservation created email:', emailError);
+    //   // Don't fail the request if email fails
+    // }
 
     res.status(201).json({
       message: 'Reservation created successfully',
