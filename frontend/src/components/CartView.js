@@ -115,24 +115,10 @@ const CartView = ({
             <div className="border-t border-sangeet-neutral-700 pt-6">
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sangeet-neutral-400">Subtotal:</span>
-                  <span className="text-sangeet-neutral-200 font-semibold">
+                  <span className="text-xl font-semibold text-sangeet-neutral-200">Total:</span>
+                  <span className="text-2xl font-bold text-sangeet-400">
                     ${getCartTotal().toFixed(2)}
                   </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sangeet-neutral-400">Tax (8.5%):</span>
-                  <span className="text-sangeet-neutral-200 font-semibold">
-                    ${(getCartTotal() * 0.085).toFixed(2)}
-                  </span>
-                </div>
-                <div className="border-t border-sangeet-neutral-700 pt-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-semibold text-sangeet-neutral-200">Total:</span>
-                    <span className="text-2xl font-bold text-sangeet-400">
-                      ${(getCartTotal() * 1.085).toFixed(2)}
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
