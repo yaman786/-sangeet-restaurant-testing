@@ -1,7 +1,7 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-// API Configuration
+// API Configuration - CACHE BUST VERSION
 const API_CONFIG = {
   BASE_URL: 'https://sangeet-restaurant-api.onrender.com/api',
   TIMEOUT: 10000,
