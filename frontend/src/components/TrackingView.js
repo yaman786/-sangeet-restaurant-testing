@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import ReviewModal from './ReviewModal';
 import { groupItemsBySession, getSessionTitle, hasMultipleSessions } from '../utils/itemUtils';
 
+// Helper function to check if item is new (added within last 5 minutes)
+const isNewItem = (createdAt) => {
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+  return new Date(createdAt) > fiveMinutesAgo;
+};
+
 const TrackingView = ({ 
   orders, 
   orderStatuses, 
