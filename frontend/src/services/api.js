@@ -1,19 +1,13 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-// Constants
+// API Configuration
 const API_CONFIG = {
   BASE_URL: process.env.REACT_APP_API_URL || 'https://sangeet-restaurant-api.onrender.com/api',
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000
 };
-
-// Debug API configuration
-console.log('🔧 API Configuration:', {
-  BASE_URL: API_CONFIG.BASE_URL,
-  ENV_VAR: process.env.REACT_APP_API_URL
-});
 
 
 
