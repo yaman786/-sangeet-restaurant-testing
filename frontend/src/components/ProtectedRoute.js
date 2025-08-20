@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
       // Check admin authentication first (admin can access everything)
       if (adminToken && adminUser) {
         try {
-          const userData = JSON.parse(adminUser);
+          JSON.parse(adminUser); // Validate JSON format
           authenticated = true;
           role = 'admin';
         } catch (error) {
@@ -30,7 +30,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
       // Check kitchen authentication
       else if (kitchenToken && kitchenUser) {
         try {
-          const userData = JSON.parse(kitchenUser);
+          JSON.parse(kitchenUser); // Validate JSON format
           authenticated = true;
           role = 'kitchen';
         } catch (error) {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReviewModal from './ReviewModal';
-import toast from 'react-hot-toast';
-import { isNewItem, getTimeSinceAdded, sortItemsByNewness, groupItemsBySession, getSessionTitle, hasMultipleSessions } from '../utils/itemUtils';
+import { groupItemsBySession, getSessionTitle, hasMultipleSessions } from '../utils/itemUtils';
 
 const TrackingView = ({ 
   orders, 

@@ -160,7 +160,7 @@ const OrderQueue = ({ onStatsUpdate, soundEnabled = true, kitchenMode = false, a
 
   useEffect(() => {
     loadOrders();
-  }, [loadOrders]);
+  }, []);
 
   useEffect(() => {
     setupSocketListeners();
