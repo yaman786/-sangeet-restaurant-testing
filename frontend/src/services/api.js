@@ -39,7 +39,7 @@ class ApiError extends Error {
  * Create axios instance with base configuration
  */
 const api = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
+  baseURL: 'https://sangeet-restaurant-api.onrender.com/api',
   timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
@@ -403,7 +403,8 @@ export const getTableByQRCode = async (qrCode) => {
 export const createOrder = async (orderData) => {
   console.log('🔧 createOrder - API Config:', {
     BASE_URL: API_CONFIG.BASE_URL,
-    fullUrl: API_CONFIG.BASE_URL + '/orders'
+    axiosBaseURL: api.defaults.baseURL,
+    fullUrl: api.defaults.baseURL + '/orders'
   });
   console.log('🔧 createOrder - Order Data:', orderData);
   return apiCallWrapper(async () => {
