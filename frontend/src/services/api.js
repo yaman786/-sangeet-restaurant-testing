@@ -401,6 +401,10 @@ export const getTableByQRCode = async (qrCode) => {
 };
 
 export const createOrder = async (orderData) => {
+  console.log('🔧 createOrder - API Config:', {
+    BASE_URL: API_CONFIG.BASE_URL,
+    fullUrl: API_CONFIG.BASE_URL + '/orders'
+  });
   return apiCallWrapper(async () => {
     return await api.post('/orders', orderData);
   }, 'createOrder', false);
