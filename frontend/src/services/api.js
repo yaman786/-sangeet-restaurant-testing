@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 
 // Constants
 const API_CONFIG = {
-  BASE_URL: (process.env.REACT_APP_API_URL || 'https://sangeet-restaurant-api.onrender.com') + '/api',
+  BASE_URL: 'https://sangeet-restaurant-api.onrender.com/api',
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000
